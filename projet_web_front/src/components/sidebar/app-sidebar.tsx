@@ -37,12 +37,12 @@ const data = {
     },
     {
       name: "Historique",
-      url: "#",
+      url: "/historic",
       icon: History,
     },
     {
       name: "Cartes",
-      url: "#",
+      url: "/card",
       icon: CreditCard,
     },
     {
