@@ -1,12 +1,12 @@
-const { Pool } = require('pg');
+const { Client } = require('pg');
 
-const pool = new Pool({
+const client = new Client({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? false : { rejectUnauthorized: false }
 });
 
-pool.connect()
+client.connect()
   .then(() => console.log("✅ Connecté à PostgreSQL"))
   .catch(err => console.error("❌ Erreur de connexion à PostgreSQL :", err));
 
-module.exports = pool; 
+module.exports = client; 

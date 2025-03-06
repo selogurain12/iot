@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers } = require('../services/usersService');
+const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, login, verifyToken, verifyTokenAdmin } = require('../services/usersService');
 const errorHandler = require("../utils/errorHandler");
 
 // Route pour récupérer tous les utilisateurs
-router.get("/", async (req, res) => {
+router.get("/", verifyTokenAdmin, async (req, res) => {
     try {
         const users = await getAllUsers();
         res.json(users);
@@ -48,7 +48,7 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// Route pour récupérer une liste d'utilisateurs par nom
+// Route pour récupérer une liste d'utilisateurs par email
 router.get("/email/:email", async (req, res) => {
     try {
         const users = await getUsersByEmail(req.params.email);
@@ -69,20 +69,12 @@ router.get("/exists/:email", async (req, res) => {
 });
 
 // Route pour se connecter
-router.post("/login", async (req, res) => {
+router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
-        if (!email) return res.status(400).json({ error: "email est requis" });
-        if (!password) return res.status(400).json({ error: "password est requis" });
-
-        const user = await getUserByEmailAndPassword(email, password);
-        if (user) {
-            res.json(user);
-        } else {
-            res.status(401).send('Email ou mot de passe incorrect');
-        }
+        const token = await login(req.body);
+        res.status(200).json({ token });
     } catch (error) {
-        errorHandler(res, error);
+        res.status(401).json({ error: error.message });
     }
 });
 

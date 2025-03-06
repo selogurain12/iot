@@ -1,4 +1,4 @@
-const pool = require("./db"); // Importez directement l'objet pool
+const client = require("./db");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -6,7 +6,6 @@ const SECRET_KEY = process.env.SECRET_KEY;
 
 // Récupère un utilisateur via son ID en base de données
 const getUserByIdBd = async (id_bd) => {
-    const client = await pool.connect();
     try {
         const result = await client.query(
             'SELECT id, email, firstname, name, created_at, password, role FROM users WHERE id = $1',
@@ -16,54 +15,49 @@ const getUserByIdBd = async (id_bd) => {
             return null;
         }
         return result.rows[0];
-    } finally {
-        client.release();
+    } catch (error) {
+        throw new Error(error);
     }
 };
 
 // Récupère une liste de User par l'email
 const getUsersByEmail = async (email) => {
-    const client = await pool.connect();
     try {
         const result = await client.query(
             'SELECT * FROM users WHERE email LIKE $1',
             [email]
         );
         return result.rows;
-    } finally {
-        client.release();
+    } catch (error) {
+        throw new Error(error);
     }
 };
 
 // Récupère tous les users
 const getAllUsers = async () => {
-    const client = await pool.connect();
     try {
         const result = await client.query('SELECT * FROM users');
-        console.log(result.rows);
         return result.rows;
-    } finally {
-        client.release();
+    } catch (error) {
+        throw new Error(error);
     }
 };
 
 // Vérifie si un utilisateur existe
 const userExists = async (email) => {
-    const client = await pool.connect();
     try {
         const result = await client.query(
             'SELECT * FROM users WHERE email = $1',
             [email]
         );
         return result.rows.length > 0;
-    } finally {
-        client.release();
+    } catch (error) {
+        throw new Error(error);
     }
 };
 
 // Ajoute un utilisateur
 const createUser = async (email, firstname, name, password) => {
-    const client = await pool.connect();
     try {
         const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
         if (result.rows.length > 0) {
@@ -76,15 +70,15 @@ const createUser = async (email, firstname, name, password) => {
             [email, firstname, name, hashedPassword, 'user']
         );
         return insertResult.rows[0];
-    } finally {
-        client.release();
+    } catch (error) {
+        throw new Error(error);
     }
 };
 
 // Login a user and generate a token
 const login = async ({ identifier, password }) => {
-    const client = await pool.connect();
     try {
+        console.log(identifier + ' ' + password);
         const result = await client.query('SELECT * FROM users WHERE email = $1', [identifier]);
         if (result.rows.length === 0) {
             throw new Error('Invalid email or password');
@@ -96,11 +90,55 @@ const login = async ({ identifier, password }) => {
             throw new Error('Invalid email or password');
         }
 
-        const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
         return token;
-    } finally {
-        client.release();
+    } catch (error) {
+        throw new Error(error);
     }
 };
 
-module.exports = { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers };
+// Middleware to verify token
+function verifyToken(req, res, next) {
+    const token = req.headers['authorization'];
+    if (!token) {
+        return res.status(403).json({ error: 'No token provided' });
+    }
+
+    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        req.user = decoded;
+        next();
+    });
+}
+
+function verifyTokenAdmin(req, res, next) {
+    const authHeader = req.headers['authorization'];
+
+    console.log(authHeader);
+    if (!authHeader) {
+        return res.status(403).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    console.log(token);
+    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        console.log(decoded
+        );
+
+        if (decoded.role !== 'admin') {
+
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        req.user = decoded;
+        next();
+    });
+}
+
+module.exports = { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, login, verifyToken, verifyTokenAdmin };
