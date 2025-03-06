@@ -1,9 +1,7 @@
 const express = require('express');
-const client = require('../services/db');
 const router = express.Router();
-const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, updateUser, deleteUser } = require('../services/usersService');
+const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, login, verifyToken, verifyTokenAdmin, updateUser, deleteUser } = require('../services/usersService');
 const errorHandler = require("../utils/errorHandler");
-const sql = require("../services/db");
 
 /**
  * @swagger
@@ -31,19 +29,19 @@ const sql = require("../services/db");
  *                     type: string
  *                     example: "alice@example.com"
  */
-router.get("/", async (req, res) => {
+router.get("/", verifyTokenAdmin, async (req, res) => {
     try {
         const users = await getAllUsers();
-        res.json(users.rows);
+        res.json(users);
     } catch (error) {
         errorHandler(res, error);
     }
 });
 
 // Route pour ajouter un utilisateur
-router.post("/", async (req, res) => {
+router.post("/register", async (req, res) => {
     try {
-        const { email, firstname, name, created_at, password } = req.body;
+        const { email, firstname, name, password } = req.body;
         if (!email) return res.status(400).json({ error: "email est requis" });
         if (!firstname) return res.status(400).json({ error: "firstname est requis" });
         if (!name) return res.status(400).json({ error: "name est requis" });
@@ -185,7 +183,7 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// Route pour récupérer une liste d'utilisateurs par nom
+// Route pour récupérer une liste d'utilisateurs par email
 router.get("/email/:email", async (req, res) => {
     try {
         const users = await getUsersByEmail(req.params.email);
@@ -202,6 +200,16 @@ router.get("/exists/:email", async (req, res) => {
         res.json({ exists });
     } catch (error) {
         errorHandler(res, error);
+    }
+});
+
+// Route pour se connecter
+router.post('/login', async (req, res) => {
+    try {
+        const token = await login(req.body);
+        res.status(200).json({ token });
+    } catch (error) {
+        res.status(401).json({ error: error.message });
     }
 });
 
