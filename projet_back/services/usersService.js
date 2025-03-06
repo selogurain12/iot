@@ -1,40 +1,14 @@
 const client = require("./db");
 const sql = require("./db");
 
+
 // Récupère un utilisateur via son ID en base de données
-const getUserByIdBd = async (id_bd) => {
-    const users = await sql`
-        SELECT 
-            u.id,
-            u.email,
-            u.firstname,
-            u.name,
-            u.created_at,
-            u.password,
-            u.role,
-        FROM 
-            "users" u
-        WHERE 
-            u.id = ${id_bd}
-        GROUP BY 
-            u.id, u.email, u.firstname, u.name, u.created_at, u.password, u.role;
-      `;
-
-    if (users.length === 0) {
-        return null;
-    }
-    var user = {
-        id: users[0].id,
-        email: users[0].email,
-        firstname: users[0].firstname,
-        name: users[0].name,
-        created_at: users[0].created_at,
-        password: users[0].password,
-        role: users[0].role
-    };
-
+const getUserByIdBd = async (id) => {
+    const user = await client.query('SELECT * FROM users WHERE id = $1::uuid', [id]);
     return user;
 };
+
+
 
 // Récupère une liste de User par le name
 const getUsersByEmail = async (email) => {
@@ -57,6 +31,14 @@ const userExists = async (email) => {
     return user.length > 0;
 };
 
+// Met à jour un utilisateur
+const updateUser = async (id, email, firstname, name, password) => {
+    await client.query(`
+        UPDATE "users"
+        SET firstname = $3, name = $4, password = $5, email = $2
+        WHERE id = $1;`, [id, email, firstname, name, password]);
+};
+
 // Ajoute un utilisateur
 const createUser = async (email, firstname, name, password) => {
     return await sql`
@@ -65,4 +47,8 @@ const createUser = async (email, firstname, name, password) => {
       RETURNING *`;
 };
 
-module.exports = { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers };
+const deleteUser = async (id) => {
+    await client.query(`DELETE FROM "users" WHERE id = $1`, [id]);
+}
+
+module.exports = { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, updateUser, deleteUser };

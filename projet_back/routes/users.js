@@ -1,11 +1,36 @@
 const express = require('express');
 const client = require('../services/db');
 const router = express.Router();
-const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers } = require('../services/usersService');
+const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, updateUser, deleteUser } = require('../services/usersService');
 const errorHandler = require("../utils/errorHandler");
 const sql = require("../services/db");
 
-// Route pour récupérer tous les utilisateurs
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Récupérer tous les utilisateurs
+ *     tags: [Utilisateurs]
+ *     responses:
+ *       200:
+ *         description: Liste de tous les utilisateurs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: "b123e456-78cd-90ef-12gh-3456789ijkl"
+ *                   name:
+ *                     type: string
+ *                     example: "Alice"
+ *                   email:
+ *                     type: string
+ *                     example: "alice@example.com"
+ */
 router.get("/", async (req, res) => {
     try {
         const users = await getAllUsers();
@@ -30,6 +55,116 @@ router.post("/", async (req, res) => {
 
         const newUser = await createUser(email, firstname, name, password);
         res.status(201).json(newUser[0]);
+    } catch (error) {
+        errorHandler(res, error);
+    }
+});
+
+/**
+ * @swagger
+ * /users/update/{id}:
+ *   put:
+ *     summary: Mettre à jour un utilisateur
+ *     tags: [Utilisateurs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur à mettre à jour
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "alice@example.com"
+ *               firstname:
+ *                 type: string
+ *                 example: "Alice"
+ *               name:
+ *                 type: string
+ *                 example: "Doe"
+ *               password:
+ *                 type: string
+ *                 example: "password123"
+ *     responses:
+ *       200:
+ *         description: Utilisateur mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "b123e456-78cd-90ef-12gh-3456789ijkl"
+ *                 email:
+ *                   type: string
+ *                   example: "alice@example.com"
+ *                 firstname:
+ *                   type: string
+ *                   example: "Alice"
+ *                 name:
+ *                   type: string
+ *                   example: "Doe"
+ *       400:
+ *         description: Requête invalide
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+router.put("/update/:id", async (req, res) => {
+    try {
+        const { email, firstname, name, password } = req.body;
+        if (!email) return res.status(400).json({ error: "email est requis" });
+        if (!firstname) return res.status(400).json({ error: "firstname est requis" });
+        if (!name) return res.status(400).json({ error: "name est requis" });
+        if (!password) return res.status(400).json({ error: "password est requis" });
+
+        const user = await getUserByIdBd(req.params.id);
+        if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+        const updatedUser = await updateUser(req.params.id, email, firstname, name, password);
+        res.json(updatedUser);
+    } catch (error) {
+        errorHandler(res, error);
+    }
+});
+
+/**
+ * @swagger
+ * /users/delete/{id}:
+ *   delete:
+ *     summary: Supprimer un utilisateur
+ *     tags: [Utilisateurs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de l'utilisateur à supprimer
+ *     responses:
+ *       204:
+ *         description: Utilisateur supprimé avec succès
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+router.delete("/delete/:id", async (req, res) => {
+    try {
+        const user = await getUserByIdBd(req.params.id);
+        if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+        deleteUser(req.params.id);
+        res.status(204).send();
     } catch (error) {
         errorHandler(res, error);
     }
