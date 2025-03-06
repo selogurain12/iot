@@ -1,14 +1,14 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <Preferences.h>
 #include <WebServer.h>
+
 
 #include "PairingManager.h"
 #include "WiFiManager.h"
 #include "ConfigManager.h"
+#include "MqttManager.h"
 
 #define MACHINE_NAME "ESP32E"
-#define MAX_RESET_COUNT 3
+
 
 
 String wifi_ssid;
@@ -18,39 +18,14 @@ String mqtt_port;
 String mqtt_user;
 String mqtt_password;
 String mqtt_topic;
+
 WebServer server(80);
-Preferences prefs;
-
-
-void reconnect_mqtt();
+bool pairing = false;
 
 
 
-void reset_manager(){
-  prefs.begin("reset", false);
-  int reset_count = prefs.getInt("reset_count", 0);
-  reset_count++;
-  Serial.print("Reset count: ");
-  Serial.println(reset_count);
 
-  prefs.putInt("reset_count", reset_count);
-  prefs.end();
 
-  
-  if (reset_count >= MAX_RESET_COUNT)
-  {
-    Serial.println("Resetting configuration");
-    reset_config();
-    prefs.begin("reset", false);
-    prefs.clear();
-    prefs.end();
-  }
-
-  delay(1000);
-  prefs.begin("reset", false);
-  prefs.putInt("reset_count", 0);
-  prefs.end();
-};
 
 void setup() {
   Serial.begin(115200);
@@ -59,16 +34,24 @@ void setup() {
   if (!load_config())
   {
     init_pairing();
+    pairing = true;
   }
   else
   {
-    init_wifi();
+    connect_wifi(wifi_ssid.c_str(), wifi_password.c_str());
+    connect_mqtt(mqtt_server.c_str(), mqtt_port.c_str(), mqtt_user.c_str(), mqtt_password.c_str());
+    pairing = false;
   }
   Serial.println("Loop :");
 }
 
 void loop() {
-  server.handleClient();
+  if (pairing){
+    server.handleClient();
+  } else{
+    check_wifi(wifi_ssid.c_str(), wifi_password.c_str());
+    check_mqtt(mqtt_server.c_str(), mqtt_port.c_str(), mqtt_user.c_str(), mqtt_password.c_str());
+  }
   Serial.print(".");
   delay(1000);
 }

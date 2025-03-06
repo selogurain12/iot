@@ -2,16 +2,19 @@
 #include "PairingManager.h"
 
 extern WebServer server;
-extern Preferences prefs;
+
+void start_accesspoint(){
+  WiFi.mode(WIFI_AP);
+  WiFi.softAPConfig(PAIRING_IPADDRESS, PAIRING_IPADDRESS, IPAddress(255, 255, 255, 0));
+  WiFi.softAP(PAIRING_NAME, PAIRING_PASSWORD);
+  Serial.println("Access Point started");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.softAPIP());
+}
 
 void init_pairing()
 {
-  WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(PAIRING_IPADDRESS, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
-  WiFi.softAP(PAIRING_NAME, PAIRING_PASSWORD);
-
-  Serial.print("IP Address: ");
-  Serial.println(WiFi.softAPIP());
+  start_accesspoint();
 
   server.on("/",HTTP_GET,[](){
     Serial.println("Root page");
@@ -19,6 +22,8 @@ void init_pairing()
   });
 
   server.on("/scan",HTTP_GET, [](){
+    Serial.println();
+    Serial.println("GET /scan");
     int n = WiFi.scanNetworks();
     JsonDocument doc;
     JsonArray networks = doc["networks"].to<JsonArray>();
@@ -32,9 +37,12 @@ void init_pairing()
     serializeJson(doc, response);
 
     server.send(200, "application/json", response);
+    Serial.println("Scan completed");
   });
 
   server.on("/connect", HTTP_POST, [](){
+    Serial.println();
+    Serial.println("POST /connect");
     if (server.hasArg("plain") == false) {
       server.send(400, "text/plain", "Body not received");
       return;
@@ -46,8 +54,8 @@ void init_pairing()
       server.send(400, "text/plain", "Invalid JSON");
       return;
     }
-    String _wifi_ssid = doc["ssid"];
-    String _wifi_password = doc["password"];
+    String _wifi_ssid = doc["wifi_ssid"];
+    String _wifi_password = doc["wifi_password"];
     String _mqtt_server = doc["mqtt_server"];
     String _mqtt_port = doc["mqtt_port"];
     String _mqtt_user = doc["mqtt_user"];
@@ -69,46 +77,24 @@ void init_pairing()
     Serial.print("MQTT Topic: ");
     Serial.println(_mqtt_topic);
 
-    Serial.println("Testing WiFi connection");
-    WiFi.begin(_wifi_ssid.c_str(), _wifi_password.c_str());
-    int i = 0;
-    while (WiFi.status() != WL_CONNECTED && i < 20)
+    if (!connect_wifi(_wifi_ssid.c_str(), _wifi_password.c_str()))
     {
-      delay(500);
-      Serial.print(".");
-      i++;
-    }
-    if (WiFi.status() != WL_CONNECTED)
-    {
-      server.send(400, "text/plain", "Connection failed");
+      server.send(400, "text/plain", "Wifi connection failed");
+      start_accesspoint();
       return;
     }
 
-
-    Serial.println("Testing MQTT connection");
-    WiFiClient client;
-    PubSubClient mqtt(client);
-    mqtt.setServer(_mqtt_server.c_str(), _mqtt_port.toInt());
-
-    if (!mqtt.connect("ESP32"))
+    if (!connect_mqtt(_mqtt_server.c_str(), _mqtt_port.c_str(), _mqtt_user.c_str(), _mqtt_password.c_str()))
     {
       server.send(400, "text/plain", "MQTT connection failed");
       return;
     }
 
-    prefs.begin("wifi-config", false);
-    prefs.putString("wifi_ssid", _wifi_ssid);
-    prefs.putString("wifi_password", _wifi_password);
-    prefs.putString("mqtt_server", _mqtt_server);
-    prefs.putString("mqtt_port", _mqtt_port);
-    prefs.putString("mqtt_user", _mqtt_user);
-    prefs.putString("mqtt_password", _mqtt_password);
-    prefs.putString("mqtt_topic", _mqtt_topic);
-    prefs.end();
+    save_config(_wifi_ssid, _wifi_password, _mqtt_server, _mqtt_port, _mqtt_user, _mqtt_password, _mqtt_topic);
     server.send(200, "text/plain", "Configuration saved, rebooting");
-    delay(500);
+    delay(1000);
     ESP.restart();
-
+    
   });
 
   server.begin();
