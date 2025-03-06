@@ -13,10 +13,12 @@ import { Button } from "../ui/button";
 interface UserColumnsProps {
     openUpdateModal: (userId: string) => void;
     openDeleteModal: (userId: string) => void
+    openAssociateModal: (userId: string) => void
+    openUpdatePinModal: (userId: string) => void
 }
 
 // Accept openModal as a prop
-export function UserColumns({ openUpdateModal, openDeleteModal }: UserColumnsProps): ColumnDef<UserDto>[] {
+export function UserColumns({ openUpdateModal, openDeleteModal, openAssociateModal, openUpdatePinModal }: UserColumnsProps): ColumnDef<UserDto>[] {
     return [
         {
             id: "firstname",
@@ -85,11 +87,11 @@ export function UserColumns({ openUpdateModal, openDeleteModal }: UserColumnsPro
                                     <Pencil className="size-4" />
                                     Modifier
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2" >
+                                <DropdownMenuItem className="gap-2" onClick={() => openAssociateModal(row.original.id)} >
                                     <Link2 className="size-4" />
                                     Associer à une carte
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2">
+                                <DropdownMenuItem className="gap-2" onClick={() => openUpdatePinModal(row.original.id)}>
                                     <Pencil className="size-4" />
                                     Modifier le PIN
                                 </DropdownMenuItem>

@@ -10,7 +10,7 @@ import { MotionAlertDialogCancelWrapper } from "../ui/alert-dialog/motion/cancel
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-interface DeleteUserModalProps {
+interface DeleteCardModalProps {
     closeModal: () => void;
     isModalDeleteOpen: boolean;
     id: string;
@@ -18,7 +18,7 @@ interface DeleteUserModalProps {
 }
 
 
-export function DeleteUser({closeModal, id, isModalDeleteOpen, refreshData}: DeleteUserModalProps) {
+export function DeleteCard({closeModal, id, isModalDeleteOpen, refreshData}: DeleteCardModalProps) {
     const navigate = useNavigate();
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
@@ -42,9 +42,9 @@ export function DeleteUser({closeModal, id, isModalDeleteOpen, refreshData}: Del
         <AlertDialog open={isModalDeleteOpen} onOpenChange={closeModal}>
 			<AlertDialogContent className="sm:max-w-[800px] sm:max-h-[80%] overflow-y-scroll bg-white rounded-lg p-8">
 				<AlertDialogHeader>
-					<AlertDialogTitle>Supprimer un utilisateur</AlertDialogTitle>
+					<AlertDialogTitle>Supprimer une carte</AlertDialogTitle>
 					<AlertDialogDescription>
-						Êtes-vous sûr de vouloir supprimer cet utilisateur ?
+						Êtes-vous sûr de vouloir supprimer cette carte ?
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 

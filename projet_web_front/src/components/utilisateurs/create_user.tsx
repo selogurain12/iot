@@ -9,9 +9,10 @@ import { useNavigate } from "react-router-dom";
 
 interface CreateUserModalProps {
     closeModal: () => void;
+    refreshData: () => Promise<void>;
 }
 
-export function CreateUserModal({ closeModal }: CreateUserModalProps) {
+export function CreateUserModal({ closeModal, refreshData }: CreateUserModalProps) {
     const navigate = useNavigate();
     const [firstname, setfirstname] = useState("");
     const [name, setname] = useState("");
@@ -36,6 +37,7 @@ export function CreateUserModal({ closeModal }: CreateUserModalProps) {
 
             toast.success("L'utilisateur a bien été créé");
             navigate("/userlist");
+            await refreshData();
             closeModal();
         } catch (error) {
             console.error("Erreur lors de l'envoi des données:", error);
