@@ -144,4 +144,4 @@ function verifyTokenAdmin(req, res, next) {
     });
 }
 
-module.exports = { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, login, verifyToken, verifyTokenAdmin };
+module.exports = { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, login, verifyToken, verifyTokenAdmin, updateUser, deleteUser };
