@@ -1,4 +1,3 @@
-require("dotenv").config();
 const { Client } = require('pg');
 
 const client = new Client({
@@ -10,4 +9,4 @@ client.connect()
   .then(() => console.log("✅ Connecté à PostgreSQL"))
   .catch(err => console.error("❌ Erreur de connexion à PostgreSQL :", err));
 
-module.exports = client;
+module.exports = client; 
