@@ -23,7 +23,7 @@ app.use("/users", usersRoutes);
 app.use("/rfid", rfidRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Hello World !");
 });
 
 // Lancer le serveur
