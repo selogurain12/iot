@@ -17,7 +17,7 @@ const usersRoutes = require("./routes/users");
 // app.use("/matchings", matchingsRoutes);
 app.use("/users", usersRoutes);
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Hello World !");
 });
 
 // Lancer le serveur
