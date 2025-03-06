@@ -1,24 +1,22 @@
 const express = require('express');
-const client = require('../services/db');
 const router = express.Router();
 const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers } = require('../services/usersService');
 const errorHandler = require("../utils/errorHandler");
-const sql = require("../services/db");
 
 // Route pour récupérer tous les utilisateurs
 router.get("/", async (req, res) => {
     try {
         const users = await getAllUsers();
-        res.json(users.rows);
+        res.json(users);
     } catch (error) {
         errorHandler(res, error);
     }
 });
 
 // Route pour ajouter un utilisateur
-router.post("/", async (req, res) => {
+router.post("/register", async (req, res) => {
     try {
-        const { email, firstname, name, created_at, password } = req.body;
+        const { email, firstname, name, password } = req.body;
         if (!email) return res.status(400).json({ error: "email est requis" });
         if (!firstname) return res.status(400).json({ error: "firstname est requis" });
         if (!name) return res.status(400).json({ error: "name est requis" });
@@ -65,6 +63,24 @@ router.get("/exists/:email", async (req, res) => {
     try {
         const exists = await userExists(req.params.email);
         res.json({ exists });
+    } catch (error) {
+        errorHandler(res, error);
+    }
+});
+
+// Route pour se connecter
+router.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email) return res.status(400).json({ error: "email est requis" });
+        if (!password) return res.status(400).json({ error: "password est requis" });
+
+        const user = await getUserByEmailAndPassword(email, password);
+        if (user) {
+            res.json(user);
+        } else {
+            res.status(401).send('Email ou mot de passe incorrect');
+        }
     } catch (error) {
         errorHandler(res, error);
     }
