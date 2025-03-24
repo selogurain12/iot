@@ -6,9 +6,31 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { CardFooter } from "../ui/cards/card-footer";
 import { Button } from "../ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "sonner";
 
 export function Login() {
+  const naviage = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
+      e.preventDefault();
+
+      try {
+          await axios.post("http://localhost:3000/users/login", {
+              email,
+              password,
+          });
+
+          toast.success("Vous êtes bien connecté")
+          naviage("/userlist")
+      } catch (error) {
+          console.error("Erreur lors de l'envoi des données:", error);
+      }
+  };
     return(
         <Card>
           <CardHeader>
@@ -17,16 +39,16 @@ export function Login() {
           <CardContent className="space-y-2">
             <div className="space-y-1">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" />
+              <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="password">Mot de passe</Label>
-              <Input id="password" />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
           </CardContent>
           <CardFooter>
             <Link to="/userlist">
-            <Button>Se connecter</Button>
+            <Button onClick={handleSubmit}>Se connecter</Button>
             </Link>
           </CardFooter>
         </Card>
