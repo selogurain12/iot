@@ -18,9 +18,11 @@ setupSwagger(app);
 // Routes
 const usersRoutes = require("./routes/users");
 const rfidRoutes = require("./routes/rfid");
+const mqttRoutes = require("./routes/mqtt");
 
 app.use("/users", usersRoutes);
 app.use("/rfid", rfidRoutes);
+app.use("/mqtt", mqttRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World !");
