@@ -8,7 +8,7 @@
 #include <MFRC522.h>
 
 void init_rfid();
-bool scanRfidCard();
+String scanRfidCard();
 // String read_rfid(byte block);
 
 

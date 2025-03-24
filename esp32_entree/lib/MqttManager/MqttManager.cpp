@@ -14,10 +14,9 @@ bool connect_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mq
     int j = 0;
     while (!mqtt.connect("ESP32E", mqtt_user, mqtt_password) && j < 10)
     {
-    delay(500);
-    Serial.print(".");
-    j++;
-
+        delay(500);
+        Serial.print(".");
+        j++;
     }
     if (!mqtt.connected())
     {
@@ -32,7 +31,9 @@ bool connect_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mq
 bool check_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mqtt_user, const char *mqtt_password) {
     if (!mqtt.connected()) {
         Serial.println("\nMQTT deconnected");
-
+        mqtt.disconnect();
+        delay(1000);
+        // mqtt = PubSubClient(client);
         if (connect_mqtt(mqtt_server, mqtt_port, mqtt_user, mqtt_password)) {
             Serial.println("MQTT reconnected");
             return true;

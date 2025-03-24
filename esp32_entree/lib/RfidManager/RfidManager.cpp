@@ -1,7 +1,6 @@
 #include "RfidManager.h"
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
-String uid = "";
 
 void init_rfid()
 {
@@ -41,46 +40,28 @@ void init_rfid()
 //     return first_name;
 // }
 
-bool scanRfidCard(){
+String scanRfidCard(){
     MFRC522::MIFARE_Key key;
+    String uid = "";
     for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
     
     if ( ! mfrc522.PICC_IsNewCardPresent()) {
-        uid = "";
-        return false;
+        return uid;
     }
 
     if ( ! mfrc522.PICC_ReadCardSerial()) {
-        return false;
+        return uid;
     }
 
-
     Serial.println("\nCard Detected");
+    
     for (byte i = 0; i < mfrc522.uid.size; i++) {
         uid += String(mfrc522.uid.uidByte[i], HEX);
     }
     Serial.print("Card UID: ");
     Serial.println(uid);
-    mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card
-    // Serial.println(read_rfid(4));
-    // Serial.println(read_rfid(1));
-
-    // String test = "Lionel";
-    // test.toCharArray((char *)buffer1, 16);
-    // block = 1;
-    // status = mfrc522.MIFARE_Write(block, buffer1, 16);
-    // if (status != MFRC522::STATUS_OK) {
-    // Serial.print(F("Échec de l'écriture: "));
-    // Serial.println(mfrc522.GetStatusCodeName(status));
-    // return;
-    // }
-    // Serial.print("First Name: ");
-    // Serial.println(first_name);
-    // Serial.print("Last Name: ");
-    // Serial.println(last_name);
     Serial.println("Card Readed");
-
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
-    return true;
+    return uid;
 }

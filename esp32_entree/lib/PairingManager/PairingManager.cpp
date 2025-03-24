@@ -2,16 +2,15 @@
 #include "PairingManager.h"
 
 extern WebServer server;
-
-const char* PAIRING_NAME = "ESP32E_Config";
+extern char hostname[25];
 const char* PAIRING_PASSWORD = "$yRTceLd7R$y39Bo";
 const IPAddress PAIRING_IPADDRESS(192, 168, 4, 1);
 
 void start_accesspoint(){
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(PAIRING_IPADDRESS, PAIRING_IPADDRESS, IPAddress(255, 255, 255, 0));
-  WiFi.softAP(PAIRING_NAME, PAIRING_PASSWORD);
-  Serial.println("Access Point started");
+  WiFi.softAP(hostname, PAIRING_PASSWORD);
+  Serial.println("Access Point started with Hostname: " + String(hostname));
   Serial.print("IP Address: ");
   Serial.println(WiFi.softAPIP());
 }
@@ -20,12 +19,12 @@ void init_pairing()
 {
   start_accesspoint();
 
-  server.on("/",HTTP_GET,[](){
+  server.on("/", HTTP_GET, [](){
     Serial.println("Root page");
     server.send(200, "text/html", "<h1>ESP32 Config</h1><p><a href='/scan'>Scan WiFi</a></p>");
   });
 
-  server.on("/scan",HTTP_GET, [](){
+  server.on("/scan", HTTP_GET, [](){
     Serial.println();
     Serial.println("GET /scan");
     int n = WiFi.scanNetworks();
