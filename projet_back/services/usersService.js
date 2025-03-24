@@ -56,21 +56,32 @@ const updateUser = async (id, email, firstname, name, password) => {
 };
 
 // Ajoute un utilisateur
-const createUser = async (email, firstname, name, password) => {
+const createUser = async ({ email, firstname, name, password }) => {
     try {
+        // Vérifier si l'utilisateur existe déjà
         const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
         if (result.rows.length > 0) {
             throw new Error('User already exists');
         }
 
+        // Hasher le mot de passe
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Créer le nouvel utilisateur
         const insertResult = await client.query(
             'INSERT INTO users (email, firstname, name, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [email, firstname, name, hashedPassword, 'user']
         );
-        return insertResult.rows[0];
+
+        const user = insertResult.rows[0];
+
+        // Générer un token pour le nouvel utilisateur
+        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+
+        // Retourner l'utilisateur et le token
+        return { token };
     } catch (error) {
-        throw new Error(error);
+        throw new Error(error.message);
     }
 };
 
@@ -117,22 +128,17 @@ function verifyToken(req, res, next) {
 }
 
 function verifyTokenAdmin(req, res, next) {
-    const authHeader = req.headers['authorization'];
+    const token = req.headers['authorization'];
 
-    console.log(authHeader);
-    if (!authHeader) {
+    if (!token) {
         return res.status(403).json({ error: 'No token provided' });
     }
 
-    const token = authHeader.split(' ')[1];
-
-    console.log(token);
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
             return res.status(401).json({ error: 'Invalid token' });
         }
-        console.log(decoded
-        );
+        console.log(decoded);
 
         if (decoded.role !== 'admin') {
 
