@@ -38,11 +38,8 @@ bool load_config()
     Serial.println("Configuration loaded");
     return true;
   }
-  else
-  {
-    Serial.println("No configuration found");
-    return false;
-  }
+  Serial.println("No configuration found");
+  return false;
 }
 
 void save_config(String _wifi_ssid, String _wifi_password, String _mqtt_server, String _mqtt_port, String _mqtt_user, String _mqtt_password, String _mqtt_topic)

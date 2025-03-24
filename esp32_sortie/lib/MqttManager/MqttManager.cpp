@@ -2,6 +2,7 @@
 #include "ServoManager.h"
 #include "ScreenManager.h"
 
+extern hostname[25];
 WiFiClient client;
 PubSubClient mqtt(client);
 
@@ -15,7 +16,7 @@ bool connect_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mq
     mqtt.setServer(mqtt_server, atoi(mqtt_port));
     mqtt.setCallback(callback);
     int j = 0;
-    while (!mqtt.connect("ESP32O", mqtt_user, mqtt_password) && j < 10)
+    while (!mqtt.connect(hostname, mqtt_user, mqtt_password) && j < 10)
     {
     delay(500);
     Serial.print(".");
@@ -35,7 +36,8 @@ bool connect_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mq
 bool check_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mqtt_user, const char *mqtt_password) {
     if (!mqtt.connected()) {
         Serial.println("\nMQTT deconnected");
-
+        mqtt.disconnect();
+        delay(1000);
         if (connect_mqtt(mqtt_server, mqtt_port, mqtt_user, mqtt_password)) {
             Serial.println("MQTT reconnected");
             return true;
