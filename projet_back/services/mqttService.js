@@ -107,18 +107,18 @@ const publish = (topic, message, options = {}) => {
  * @param {object} inModule - Module d'entrée (objet avec id, hostname, etc.)
  */
 const subscribeToInputModule = (inModule) => {
-    // Extraire l'adresse MAC du hostname (ESP32-IN-XXXX)
-    const macAddress = inModule.hostname.split('-')[2];
+    // Extraire l'adresse MAC du hostname (ESP32_I_XXXX)
+    const macAddress = inModule.hostname.split('_')[2];
 
     // S'abonner au topic principal
-    const specificTopic = `esp32/in/${macAddress}`;
+    const specificTopic = `ESP32_I_${macAddress}`;
     subscribe(specificTopic, (topic, message) => {
         console.log(`Message du module d'entrée ${inModule.hostname}: ${message}`);
         handleInputModuleMessage(inModule.id, message);
     });
 
     // S'abonner au topic de statut
-    subscribe(`esp32/in/${macAddress}/status`, (topic, message) => {
+    subscribe(`ESP32_I_${macAddress}/status`, (topic, message) => {
         console.log(`Statut du module d'entrée ${inModule.hostname}: ${message}`);
         // Traitement du message de statut...
     });
@@ -153,13 +153,14 @@ const subscribeToAllInputModules = async () => {
  * Configuration des abonnements par défaut au démarrage
  */
 const setupDefaultSubscriptions = () => {
-    // Abonnement au topic "bonjour" pour découvrir les modules
-    subscribe('esp32/bonjour', async (topic, message) => {
+    // Abonnement au topic général
+    subscribe('arrivals', async (topic, message) => {
         console.log(`📡 Nouveau module détecté: ${message}`);
 
         try {
             // Analyser le message reçu
-            const msgPattern = /^esp32([OI]):([0-9A-F\-]+)$/i;
+            const msgPattern = /^ESP32_([OI])_((?:[0-9A-F]{2}){6})$/i;
+
             const matches = message.toString().match(msgPattern);
 
             if (!matches) {
@@ -169,7 +170,7 @@ const setupDefaultSubscriptions = () => {
 
             const type = matches[1] === 'O' ? 'OUT' : 'IN';
             const macAddress = matches[2];
-            const hostname = `ESP32-${type}-${macAddress}`;
+            const hostname = `ESP32_${matches[1]}_${macAddress}`;
 
             // Vérifier si le module existe déjà
             const existingModule = await pgClient.query(
@@ -253,8 +254,8 @@ const handleInputModuleMessage = async (moduleId, message) => {
             // Envoyer réponse au module d'entrée
             const moduleInfo = await pgClient.query('SELECT * FROM module WHERE id = $1', [moduleId]);
             if (moduleInfo.rows.length > 0) {
-                const macAddress = moduleInfo.rows[0].hostname.split('-')[2];
-                publish(`esp32/in/${macAddress}/response`, {
+                const macAddress = moduleInfo.rows[0].hostname.split('_')[2];
+                publish(`ESP32_I_${macAddress}/response`, {
                     type: 'access_response',
                     request_id: data.request_id,
                     granted: accessResult.success,
@@ -283,11 +284,11 @@ const sendCommandToOutputModule = async (moduleId, command) => {
 
         const module = result.rows[0];
 
-        // Extraire l'adresse MAC du hostname (ESP32-OUT-XXXX)
-        const macAddress = module.hostname.split('-')[2];
+        // Extraire l'adresse MAC du hostname (ESP32_OUT_XXXX)
+        const macAddress = module.hostname.split('_')[2];
 
         // Envoyer la commande au topic du module
-        const topic = `esp32/out/${macAddress}`;
+        const topic = `ESP32_O_${macAddress}`;
         publish(topic, command);
 
         return { success: true, message: `Commande envoyée au module ${module.hostname}` };
