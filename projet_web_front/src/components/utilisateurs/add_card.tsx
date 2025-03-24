@@ -22,7 +22,7 @@ export function AddCard({ id, closeModal, refreshData }: AddCardProps) {
         const fetchData = async () => {
             try {
                 const response = await axios.get(
-                    `http://localhost:3001/users`
+                    `http://localhost:3000/users`
                 );
                 setData(response.data);
             } catch (error) {
@@ -41,7 +41,7 @@ export function AddCard({ id, closeModal, refreshData }: AddCardProps) {
         e.preventDefault();
         try {
             // Assurez-vous de soumettre l'ID de l'utilisateur sélectionné ici
-            await axios.post("http://localhost:3001/rfid", { userId: selectedUser });
+            await axios.post("http://localhost:3000/rfid", { userId: selectedUser });
             toast.success("Carte RFID ajoutée avec succès");
             navigate("/userlist");
             refreshData();

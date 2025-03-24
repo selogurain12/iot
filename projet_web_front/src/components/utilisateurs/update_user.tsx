@@ -25,7 +25,7 @@ export function UpdateUserModal({ closeModal, id }: UpdateUserModalProps) {
         const fetchData = async () => {
             try {
                 const response = await axios.get<UserDto>(
-                    `http://localhost:3001/users/${id}`
+                    `http://localhost:3000/users/${id}`
                 );
                 setData(response.data);
             } catch (error) {
@@ -57,7 +57,7 @@ export function UpdateUserModal({ closeModal, id }: UpdateUserModalProps) {
         });
         
         try {
-            await axios.post("http://localhost:3001/users", {
+            await axios.post("http://localhost:3000/users", {
                 firstname,
                 name,
                 email,

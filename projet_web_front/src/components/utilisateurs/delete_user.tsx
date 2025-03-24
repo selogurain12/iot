@@ -23,7 +23,7 @@ export function DeleteUser({closeModal, id, isModalDeleteOpen, refreshData}: Del
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         try {
-            const response = await axios.delete(`http://localhost:3001/users/${id}`);
+            const response = await axios.delete(`http://localhost:3000/users/${id}`);
             console.log(response)
             if (response.status === 200) {
                 toast.success("L'utilisateur a bien été supprimé");

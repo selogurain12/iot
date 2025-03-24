@@ -13,7 +13,7 @@ export function HistoriqueTable() {
     const refreshData = useCallback(async () => {
         try {
             const response = await axios.get<HistoriqueDto[]>(
-                `http://localhost:3001/users?page=${page}&limit=${itemsPerPage}&search=${search}`
+                `http://localhost:3000/users?page=${page}&limit=${itemsPerPage}&search=${search}`
             );
             setData(response.data);
         } catch (error) {

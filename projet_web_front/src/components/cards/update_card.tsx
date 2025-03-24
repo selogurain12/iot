@@ -26,7 +26,7 @@ export function UpdateCard({ closeModal, id }: UpdateCardProps) {
         const fetchData = async () => {
             try {
                 const response = await axios.get<CardDto>(
-                    `http://localhost:3001/users/${id}`
+                    `http://localhost:3000/users/${id}`
                 );
                 setData(response.data);
             } catch (error) {
@@ -53,7 +53,7 @@ export function UpdateCard({ closeModal, id }: UpdateCardProps) {
         e.preventDefault();
         
         try {
-            await axios.post("http://localhost:3001/users", {
+            await axios.post("http://localhost:3000/users", {
                 date,
                 name,
                 information,
