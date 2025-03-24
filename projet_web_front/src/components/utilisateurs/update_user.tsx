@@ -5,22 +5,23 @@ import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { UserDto } from "../dtos/user.dto";
 
 interface UpdateUserModalProps {
     closeModal: () => void;
     id: string;
+    refreshData: () => Promise<void>;
 }
 
-export function UpdateUserModal({ closeModal, id }: UpdateUserModalProps) {
-    const navigate = useNavigate();
+export function UpdateUserModal({ closeModal, id, refreshData }: UpdateUserModalProps) {
     const [firstname, setfirstname] = useState("");
     const [name, setname] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
     const [data, setData] = useState<UserDto>();
     const [loading, setLoading] = useState(true);
+    console.log(id)
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -44,29 +45,24 @@ export function UpdateUserModal({ closeModal, id }: UpdateUserModalProps) {
             setfirstname(data.firstname);
             setname(data.name);
             setEmail(data.email);
-            setPassword(data.password);
         }
     }, [data]); // This ensures state updates only when `data` changes
     
 
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
-        const created_at = new Date().toLocaleString("fr-FR", {
-            timeZone: "Europe/Paris",
-            hour12: false,
-        });
         
         try {
-            await axios.post("http://localhost:3000/users", {
+            await axios.put(`http://localhost:3000/users/update/${id}`, {
                 firstname,
                 name,
                 email,
                 password,
-                created_at,
+                newPassword
             });
 
-            toast.success("L'utilisateur a bien été créé");
-            navigate("/userlist");
+            toast.success("L'utilisateur a bien été modifié");
+            await refreshData();
             closeModal();
         } catch (error) {
             console.error("Erreur lors de l'envoi des données:", error);
@@ -109,12 +105,21 @@ export function UpdateUserModal({ closeModal, id }: UpdateUserModalProps) {
                             />
                         </div>
                         <div className="space-y-1">
-                            <Label htmlFor="password">Mot de passe</Label>
+                            <Label htmlFor="password">Mot de passe actuel</Label>
                             <Input
                                 id="password"
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="password">Nouveau mot de passe</Label>
+                            <Input
+                                id="newPassword"
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
                             />
                         </div>
                     </CardContent>

@@ -10,9 +10,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import { useAuth } from "../../context/authContext";
 
 export function Login() {
   const naviage = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -20,11 +22,12 @@ export function Login() {
       e.preventDefault();
 
       try {
-          await axios.post("http://localhost:3000/users/login", {
+          const response = await axios.post("http://localhost:3000/users/login", {
               email,
               password,
           });
-
+          console.log(response.data.user)
+          signIn(response.data.user, response.data.token, 3600)
           toast.success("Vous êtes bien connecté")
           naviage("/userlist")
       } catch (error) {

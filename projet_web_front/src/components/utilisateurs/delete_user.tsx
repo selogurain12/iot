@@ -18,15 +18,18 @@ interface DeleteUserModalProps {
 }
 
 
-export function DeleteUser({closeModal, id, isModalDeleteOpen, refreshData}: DeleteUserModalProps) {
+export function DeleteUser({ closeModal, id, isModalDeleteOpen, refreshData }: DeleteUserModalProps) {
     const navigate = useNavigate();
+
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         try {
-            const response = await axios.delete(`http://localhost:3000/users/${id}`);
-            console.log(response)
-            if (response.status === 200) {
+            const response = await axios.delete(`http://localhost:3000/users/delete/${id}`);
+            console.log(response);
+
+            if (response.status === 204) {
                 toast.success("L'utilisateur a bien été supprimé");
+
                 await refreshData();
                 setTimeout(() => {
                     navigate("/userlist");
@@ -35,24 +38,25 @@ export function DeleteUser({closeModal, id, isModalDeleteOpen, refreshData}: Del
             }
         } catch (error) {
             console.error("Erreur lors de l'envoi des données:", error);
+            toast.error("Une erreur s'est produite lors de la suppression.");
         }
     };
 
-    return(
+    return (
         <AlertDialog open={isModalDeleteOpen} onOpenChange={closeModal}>
-			<AlertDialogContent className="sm:max-w-[800px] sm:max-h-[80%] overflow-y-scroll bg-white rounded-lg p-8">
-				<AlertDialogHeader>
-					<AlertDialogTitle>Supprimer un utilisateur</AlertDialogTitle>
-					<AlertDialogDescription>
-						Êtes-vous sûr de vouloir supprimer cet utilisateur ?
-					</AlertDialogDescription>
-				</AlertDialogHeader>
+            <AlertDialogContent className="sm:max-w-[800px] sm:max-h-[80%] overflow-y-scroll bg-white rounded-lg p-8">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Supprimer un utilisateur</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Êtes-vous sûr de vouloir supprimer cet utilisateur ?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
 
-				<AlertDialogFooter>
-					<MotionAlertDialogCancelWrapper onClick={closeModal}	/>
-					<MotionAlertDialogActionWrapper onClick={() => handleSubmit({ preventDefault: () => {} })} />
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
-    )
+                <AlertDialogFooter>
+                    <MotionAlertDialogCancelWrapper onClick={closeModal} />
+                    <MotionAlertDialogActionWrapper onClick={() => handleSubmit({ preventDefault: () => {} })} />
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
 }

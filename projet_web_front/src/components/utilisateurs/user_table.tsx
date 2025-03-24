@@ -9,6 +9,7 @@ import { CreateUserModal } from "./create_user";
 import { Button } from "../ui/button";
 import { AddCard } from "./add_card";
 import { UpdatePIN } from "./update_pin";
+import { useAuth } from "../../context/authContext";
 
 export function UserTable() {
     const [data, setData] = useState<UserDto[]>([]);
@@ -21,18 +22,22 @@ export function UserTable() {
     const [isModalAssociateOpen, setIsModalAssociateOpen] = useState(false);
     const [isModalUpdatePinOpen, setIsModalUpdatePinOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-
+    const { token } = useAuth();
     // Fonction pour rafraîchir les données
     const refreshData = useCallback(async () => {
         try {
             const response = await axios.get<UserDto[]>(
-                `http://localhost:3000/users?page=${page}&limit=${itemsPerPage}&search=${search}`
+                `http://localhost:3000/users?page=${page}&limit=${itemsPerPage}&search=${search}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
             );
             setData(response.data);
         } catch (error) {
             console.error("Erreur lors de la récupération des utilisateurs :", error);
         }
-    }, [page, itemsPerPage, search]);
+    }, [page, itemsPerPage, search, token]);
 
     useEffect(() => {
         refreshData();
@@ -103,7 +108,7 @@ export function UserTable() {
                 setSearch={setSearch}
             />
             {isModalUpdateOpen && selectedUserId && (
-                <UpdateUserModal id={selectedUserId} closeModal={closeUpdateModal} />
+                <UpdateUserModal id={selectedUserId} closeModal={closeUpdateModal} refreshData={refreshData} />
             )}
 
             {isModalDeleteOpen && selectedUserId && (
