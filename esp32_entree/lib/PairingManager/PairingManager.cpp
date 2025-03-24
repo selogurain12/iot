@@ -3,6 +3,10 @@
 
 extern WebServer server;
 
+const char* PAIRING_NAME = "ESP32E_Config";
+const char* PAIRING_PASSWORD = "$yRTceLd7R$y39Bo";
+const IPAddress PAIRING_IPADDRESS(192, 168, 4, 1);
+
 void start_accesspoint(){
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(PAIRING_IPADDRESS, PAIRING_IPADDRESS, IPAddress(255, 255, 255, 0));

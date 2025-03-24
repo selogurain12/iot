@@ -8,7 +8,7 @@ bool connect_wifi(const char *ssid, const char *password){
   int i = 0;
   while (WiFi.status() != WL_CONNECTED && i < 10)
   {
-    delay(500);
+    delay(1000);
     Serial.print(".");
     i++;
   }
@@ -19,11 +19,15 @@ bool connect_wifi(const char *ssid, const char *password){
   }
   Serial.println("\nWiFi connected");
   Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(get_local_ip());
   return true;  
 }
 
-bool check_wifi(const char *ssid, const char *password) {
+void disconnect_wifi(){
+  WiFi.disconnect();
+}
+
+bool is_wifi_connected(const char *ssid, const char *password) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi deconnected");
     if (connect_wifi(ssid, password)){
@@ -35,4 +39,11 @@ bool check_wifi(const char *ssid, const char *password) {
     }
   }
   return true;
+}
+
+String get_local_ip(){
+  if (WiFi.status() != WL_CONNECTED){
+    return "";
+  }
+  return WiFi.localIP().toString();
 }

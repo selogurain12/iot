@@ -46,3 +46,22 @@ bool check_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mqtt
 
     return true;
 }
+
+void publish(const char *topic, const char *message) {
+    mqtt.publish(topic, message);
+}
+
+void subscribe(const char *topic) {
+    mqtt.subscribe(topic);
+}
+
+void callback(char *topic, byte *payload, unsigned int length) {
+    Serial.print("Message arrived [");
+    Serial.print(topic);
+    Serial.print("] ");
+    for (int i = 0; i < length; i++)
+    {
+        Serial.print((char)payload[i]);
+    }
+    Serial.println();
+}

@@ -6,6 +6,8 @@
 #include "WiFiManager.h"
 #include "ConfigManager.h"
 #include "MqttManager.h"
+#include "RfidManager.h"
+#include "AuthManager.h"
 
 #define MACHINE_NAME "ESP32E"
 
@@ -22,11 +24,6 @@ String mqtt_topic;
 WebServer server(80);
 bool pairing = false;
 
-
-
-
-
-
 void setup() {
   Serial.begin(115200);
   reset_manager();
@@ -38,8 +35,10 @@ void setup() {
   }
   else
   {
+    aes_init();
     connect_wifi(wifi_ssid.c_str(), wifi_password.c_str());
     connect_mqtt(mqtt_server.c_str(), mqtt_port.c_str(), mqtt_user.c_str(), mqtt_password.c_str());
+    init_rfid();
     pairing = false;
   }
   Serial.println("Loop :");
@@ -49,10 +48,23 @@ void loop() {
   if (pairing){
     server.handleClient();
   } else{
-    check_wifi(wifi_ssid.c_str(), wifi_password.c_str());
+    is_wifi_connected(wifi_ssid.c_str(), wifi_password.c_str());
     check_mqtt(mqtt_server.c_str(), mqtt_port.c_str(), mqtt_user.c_str(), mqtt_password.c_str());
+    if (scanRfidCard()){
+      test();
+      // Serial.println("RFID Card Detected");
+      // String first_name = read_rfid(1);
+      // Serial.println("First Name : " + first_name);
+      // String uid = read_rfid(0);
+      // Serial.println("UID : " + uid);
+      // if (authenticateUser(uid, first_name)){
+      //   Serial.println("User Authenticated");
+      // } else {
+      //   Serial.println("User Not Authenticated");
+      // }
+    }
   }
+
   Serial.print(".");
   delay(1000);
 }
-
