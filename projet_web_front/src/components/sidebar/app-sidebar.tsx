@@ -1,8 +1,9 @@
 import * as React from "react"
 import {
+  CreditCard,
+  History,
   LogOut,
-  Map,
-  PieChart,
+  Settings,
   User,
   Users,
 } from "lucide-react"
@@ -15,7 +16,6 @@ import {
   SidebarRail,
 } from "../ui/sidebar"
 
-// This is sample data.
 const data = {
   user: [
     {
@@ -32,18 +32,23 @@ const data = {
   projects: [
     {
       name: "Utilisateurs",
-      url: "#",
+      url: "/userlist",
       icon: Users,
     },
     {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
+      name: "Historique",
+      url: "/historic",
+      icon: History,
     },
     {
-      name: "Travel",
+      name: "Cartes",
+      url: "/card",
+      icon: CreditCard,
+    },
+    {
+      name: "Modules",
       url: "#",
-      icon: Map,
+      icon: Settings,
     },
   ],
 }
