@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { UserDto } from "../dtos/user.dto";
+import { useAuth } from "../../context/authContext";
 
 interface UpdateUserModalProps {
     closeModal: () => void;
@@ -21,12 +22,17 @@ export function UpdateUserModal({ closeModal, id, refreshData }: UpdateUserModal
     const [newPassword, setNewPassword] = useState("");
     const [data, setData] = useState<UserDto>();
     const [loading, setLoading] = useState(true);
+    const { token } = useAuth();
     console.log(id)
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await axios.get<UserDto>(
-                    `http://10.33.76.16:3000/users/${id}`
+                    `http://10.33.76.16:3000/users/${id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
                 );
                 setData(response.data);
             } catch (error) {
@@ -37,7 +43,7 @@ export function UpdateUserModal({ closeModal, id, refreshData }: UpdateUserModal
         };
     
         fetchData();
-    }, [id]);
+    }, [id, token]);
     console.log(data)
     // New useEffect to update state when data is fetched
     useEffect(() => {

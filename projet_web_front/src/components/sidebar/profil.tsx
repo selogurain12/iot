@@ -9,7 +9,7 @@ import { UserDto } from "../dtos/user.dto";
 import axios from "axios";
 
 export function Profil() {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const [data, setData] = useState<UserDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,7 +18,11 @@ export function Profil() {
         if (user) {
             const fetchData = async () => {
                 try {
-                    const response = await axios.get<UserDto>(`http://10.33.76.16:3000/users/${user.id}`);
+                    const response = await axios.get<UserDto>(`http://10.33.76.16:3000/users/${user.id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
                     setData(response.data);
                 } catch (error) {
                     console.error("Erreur lors de la récupération des utilisateurs :", error);
@@ -29,7 +33,7 @@ export function Profil() {
 
             fetchData();
         }
-    }, [user]);
+    }, [token, user]);
 
     const refreshData = async () => {
         if (user) {
