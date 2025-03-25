@@ -7,7 +7,7 @@ import { UpdateUserModal } from "./update_user";
 import { DeleteUser } from "./delete_user";
 import { CreateUserModal } from "./create_user";
 import { Button } from "../ui/button";
-import { AddCard } from "./add_card";
+import { AddCard } from "../cards/add_card";
 import { UpdatePIN } from "./update_pin";
 import { useAuth } from "../../context/authContext";
 

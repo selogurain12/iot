@@ -38,7 +38,7 @@ export function UpdateUserModal({ closeModal, id, refreshData }: UpdateUserModal
     
         fetchData();
     }, [id]);
-    
+    console.log(data)
     // New useEffect to update state when data is fetched
     useEffect(() => {
         if (data) {

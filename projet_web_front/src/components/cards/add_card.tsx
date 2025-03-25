@@ -1,28 +1,35 @@
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { Select, SelectItem, SelectTrigger, SelectContent, SelectLabel, SelectGroup, SelectValue } from "../ui/select";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { UserDto } from "../dtos/user.dto";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { useAuth } from "../../context/authContext";
 
 interface AddCardProps {
-    id: string;
     closeModal: () => void;
     refreshData: () => Promise<void>;
 }
 
-export function AddCard({ id, closeModal, refreshData }: AddCardProps) {
+export function AddCard({ closeModal, refreshData }: AddCardProps) {
     const [data, setData] = useState<UserDto[]>([]);
+    const [card_id, setcard_id] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>("");
+    const { token } = useAuth();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(
-                    `http://10.33.76.16:3000/users`
+                const response = await axios.get<UserDto[]>(
+                    `http://10.33.76.16:3000/users`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
                 );
                 setData(response.data);
             } catch (error) {
@@ -33,17 +40,16 @@ export function AddCard({ id, closeModal, refreshData }: AddCardProps) {
         };
 
         fetchData();
-    }, [id]);
-
-    const navigate = useNavigate();
-
+    }, [token]);
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         try {
             // Assurez-vous de soumettre l'ID de l'utilisateur sélectionné ici
-            await axios.post("http://10.33.76.16:3000/rfid", { userId: selectedUser });
+            await axios.post(`http://10.33.76.16:3000/rfid`, {
+                        card_id,
+                        user_id: selectedUser
+                    });
             toast.success("Carte RFID ajoutée avec succès");
-            navigate("/userlist");
             refreshData();
             closeModal();
         } catch (error) {
@@ -59,10 +65,18 @@ export function AddCard({ id, closeModal, refreshData }: AddCardProps) {
                         <CardTitle>Ajouter une carte RFID</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
+                    <div className="space-y-1">
+                            <Label htmlFor="card_id">Id de la carte</Label>
+                            <Input
+                                id="card_id"
+                                value={card_id}
+                                onChange={(e) => setcard_id(e.target.value)}
+                            />
+                        </div>
                         {loading ? (
                             <p>Chargement des utilisateurs...</p>
                         ) : (
-                            <div className="w-full">
+                        <div className="space-y-1">
                             <Select value={selectedUser} onValueChange={setSelectedUser}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Sélectionner un utilisateur" /> {/* Affiche la valeur sélectionnée ici */}

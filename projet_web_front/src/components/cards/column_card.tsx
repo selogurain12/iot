@@ -19,9 +19,9 @@ interface CardColumnsProps {
 export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinModal }: CardColumnsProps): ColumnDef<CardDto>[] {
     return [
         {
-            id: "id",
+            id: "card_id",
             meta: "Id Carte",
-            accessorKey: "id",
+            accessorKey: "card_id",
             enableHiding: false,
             enableSorting: false,
             header: ({ column }) => (
@@ -29,7 +29,7 @@ export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinMod
             ),
             cell: ({ row }) => (
                 <div className="flex space-x-2 justify-center w-32">
-                    <span className="truncate font-medium text-center">{row.getValue("id")}</span>
+                    <span className="truncate font-medium text-center">{row.getValue("card_id")}</span>
                 </div>
             ),
         },
@@ -49,9 +49,9 @@ export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinMod
             ),
         },
         {
-            id: "mail",
+            id: "email",
             meta: "Mail",
-            accessorKey: "mail",
+            accessorKey: "email",
             enableHiding: false,
             enableSorting: false,
             header: ({ column }) => (
@@ -59,7 +59,7 @@ export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinMod
             ),
             cell: ({ row }) => (
                 <div className="flex space-x-2 justify-center w-32">
-                    <span className="w-full truncate font-medium text-center">{row.getValue("mail")}</span>
+                    <span className="w-full truncate font-medium text-center">{row.getValue("email")}</span>
                 </div>
             ),
         },
@@ -96,7 +96,7 @@ export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinMod
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem className="gap-2" onClick={() => openUpdateModal(row.original.id)}>
+                                <DropdownMenuItem className="gap-2" onClick={() => openUpdateModal(row.original.card_id)}>
                                     <Pencil className="size-4" />
                                     Modifier
                                 </DropdownMenuItem>

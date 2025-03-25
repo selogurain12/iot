@@ -1,10 +1,9 @@
 export interface CardDto {
     id: string;
-    name: string;
-    mail: string;
-    pin_code: string;
-    information: string;
-    date: Date;
+    card_id: string;
+    is_active: boolean;
+    user_id: string;
+    created_at: Date;
     
-    [key: string]: string | number | Date | undefined;
+    [key: string]: string | number | Date | undefined | boolean;
 }

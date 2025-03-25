@@ -8,7 +8,6 @@ import { AlertDialogTitle } from "../ui/alert-dialog/alert-dialog-title";
 import { MotionAlertDialogActionWrapper } from "../ui/alert-dialog/motion/action-wrapper.motion";
 import { MotionAlertDialogCancelWrapper } from "../ui/alert-dialog/motion/cancel-wrapper.motion";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
 interface DeleteCardModalProps {
     closeModal: () => void;
@@ -19,17 +18,15 @@ interface DeleteCardModalProps {
 
 
 export function DeleteCard({closeModal, id, isModalDeleteOpen, refreshData}: DeleteCardModalProps) {
-    const navigate = useNavigate();
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         try {
-            const response = await axios.delete(`http://10.33.76.16:3000/users/${id}`);
+            const response = await axios.delete(`http://10.33.76.16:3000/rfid/${id}`);
             console.log(response)
             if (response.status === 200) {
-                toast.success("L'utilisateur a bien été supprimé");
+                toast.success("La carte a bien été supprimée");
                 await refreshData();
                 setTimeout(() => {
-                    navigate("/userlist");
                     closeModal();
                 }, 1000);
             }
