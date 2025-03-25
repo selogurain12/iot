@@ -5,8 +5,6 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { UserDto } from "../dtos/user.dto";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
 import { useAuth } from "../../context/authContext";
 import { CardDto } from "../dtos/card.dto";
 
@@ -19,9 +17,10 @@ interface UpdateCardProps {
 export function UpdateCard({ closeModal, id, refreshData }: UpdateCardProps) {
     const [data, setData] = useState<UserDto[]>([]);
     const [card, setCard] = useState<CardDto>();
-    const [card_id, setcard_id] = useState<string>("");
+    const [allCard, setAllCard] = useState<CardDto[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>("");
+    const [selectedCard, setSelectedCard] = useState<string>("");
     const { token } = useAuth();
      useEffect(() => {
             const fetchData = async () => {
@@ -41,7 +40,7 @@ export function UpdateCard({ closeModal, id, refreshData }: UpdateCardProps) {
         }, [id]);
          useEffect(() => {
                 if (card) {
-                    setcard_id(card.card_id);
+                    setSelectedCard(card.card_id);
                     setSelectedUser(card.user_id);
                 }
             }, [card]);
@@ -55,7 +54,11 @@ export function UpdateCard({ closeModal, id, refreshData }: UpdateCardProps) {
                         }
                     }
                 );
+                const cardData = await axios.get<CardDto[]>(
+                    `http://10.33.76.16:3000/rfid`
+                );
                 setData(response.data);
+                setAllCard(cardData.data)
             } catch (error) {
                 console.error("Erreur lors de la récupération des utilisateurs :", error);
             } finally {
@@ -70,7 +73,7 @@ export function UpdateCard({ closeModal, id, refreshData }: UpdateCardProps) {
         try {
             // Assurez-vous de soumettre l'ID de l'utilisateur sélectionné ici
             await axios.put(`http://10.33.76.16:3000/rfid/${card?.id}`, {
-                        card_id,
+                        card_id: selectedCard,
                         user_id: selectedUser
                     });
             toast.success("Carte RFID ajoutée avec succès");
@@ -89,14 +92,27 @@ export function UpdateCard({ closeModal, id, refreshData }: UpdateCardProps) {
                         <CardTitle>Modifier une carte RFID</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                    <div className="space-y-1">
-                            <Label htmlFor="card_id">Id de la carte</Label>
-                            <Input
-                                id="card_id"
-                                value={card_id}
-                                onChange={(e) => setcard_id(e.target.value)}
-                            />
-                        </div>
+                    {loading ? (
+                            <p>Chargement des cartes...</p>
+                        ) : (
+                        <div className="space-y-1">
+                            <Select value={selectedCard} onValueChange={setSelectedCard}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Sélectionner une carte" /> {/* Affiche la valeur sélectionnée ici */}
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>Choisir une carte</SelectLabel>
+                                        {allCard.map((card) => (
+                                            <SelectItem key={card.card_id} value={card.card_id}>
+                                                {card.card_id}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            </div>
+                        )}
                         {loading ? (
                             <p>Chargement des utilisateurs...</p>
                         ) : (

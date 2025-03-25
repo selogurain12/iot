@@ -5,9 +5,8 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { UserDto } from "../dtos/user.dto";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
 import { useAuth } from "../../context/authContext";
+import { CardDto } from "../dtos/card.dto";
 
 interface AddCardProps {
     closeModal: () => void;
@@ -16,9 +15,10 @@ interface AddCardProps {
 
 export function AddCard({ closeModal, refreshData }: AddCardProps) {
     const [data, setData] = useState<UserDto[]>([]);
-    const [card_id, setcard_id] = useState<string>("");
+    const [card, setCard] = useState<CardDto[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>("");
+    const [selectedCard, setSelectedCard] = useState<string>("");
     const { token } = useAuth();
 
     useEffect(() => {
@@ -31,7 +31,11 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
                         }
                     }
                 );
+                const cardData = await axios.get<CardDto[]>(
+                    `http://10.33.76.16:3000/rfid`
+                );
                 setData(response.data);
+                setCard(cardData.data)
             } catch (error) {
                 console.error("Erreur lors de la récupération des utilisateurs :", error);
             } finally {
@@ -46,7 +50,7 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
         try {
             // Assurez-vous de soumettre l'ID de l'utilisateur sélectionné ici
             await axios.post(`http://10.33.76.16:3000/rfid`, {
-                        card_id,
+                        card_id: selectedCard,
                         user_id: selectedUser
                     });
             toast.success("Carte RFID ajoutée avec succès");
@@ -65,14 +69,27 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
                         <CardTitle>Ajouter une carte RFID</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                    <div className="space-y-1">
-                            <Label htmlFor="card_id">Id de la carte</Label>
-                            <Input
-                                id="card_id"
-                                value={card_id}
-                                onChange={(e) => setcard_id(e.target.value)}
-                            />
-                        </div>
+                    {loading ? (
+                            <p>Chargement des cartes...</p>
+                        ) : (
+                        <div className="space-y-1">
+                            <Select value={selectedCard} onValueChange={setSelectedCard}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Sélectionner une carte" /> {/* Affiche la valeur sélectionnée ici */}
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>Choisir une carte</SelectLabel>
+                                        {card.map((card) => (
+                                            <SelectItem key={card.card_id} value={card.card_id}>
+                                                {card.card_id}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            </div>
+                        )}
                         {loading ? (
                             <p>Chargement des utilisateurs...</p>
                         ) : (
