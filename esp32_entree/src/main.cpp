@@ -1,84 +1,162 @@
 #include <Arduino.h>
 #include <WebServer.h>
 
-
 #include "PairingManager.h"
 #include "WiFiManager.h"
 #include "ConfigManager.h"
 #include "MqttManager.h"
 #include "RfidManager.h"
+#include "MatrixKeyboardManager.h"
+#define RFID_TIMEOUT 5000
+String wifiSsid;
+String wifiPassword;
+String mqttServer;
+String mqttPort;
+String mqttUser;
+String mqttPassword;
+String mqttTopic;
 
-String wifi_ssid;
-String wifi_password;
-String mqtt_server;
-String mqtt_port;
-String mqtt_user;
-String mqtt_password;
-String mqtt_topic;
 char hostname[25];
+char accessTopicMqtt[32];
+char displayTopicMqtt[33];
+char cardTopicMqtt[31];
+
+enum enumMachineState
+{
+  waitingRfid,
+  waitingCode,
+  sending,
+};
+enumMachineState machineState = waitingRfid;
+unsigned long lastActiveTime = 0;
 
 WebServer server(80);
 bool pairing = false;
+char uid[8];
+char keys[5];
 
-void generateHostname() {
+void generateHostname()
+{
   uint8_t mac[6];
   WiFi.macAddress(mac);
-  // Generate a hostname based on the MAC address
   char macStr[13];
   snprintf(macStr, sizeof(macStr), "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  snprintf(hostname, sizeof(hostname), "ESP32_%s_%s",DEVICE_TYPE, macStr);
+  snprintf(hostname, sizeof(hostname), "ESP32_%s_%s", DEVICE_TYPE, macStr);
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   generateHostname();
-  reset_manager();
-  
-  if (!load_config())
+  snprintf(accessTopicMqtt, sizeof(accessTopicMqtt), "/in/%s/access", hostname);
+  snprintf(displayTopicMqtt, sizeof(displayTopicMqtt), "/in/%s/display", hostname);
+  snprintf(cardTopicMqtt, sizeof(cardTopicMqtt), "/in/%s/card", hostname);
+  resetManager();
+
+  if (!loadConfig())
   {
-    init_pairing();
+    initPairing();
     pairing = true;
   }
   else
   {
-    connect_wifi(wifi_ssid.c_str(), wifi_password.c_str());
-    connect_mqtt(mqtt_server.c_str(), mqtt_port.c_str(), mqtt_user.c_str(), mqtt_password.c_str());
-    init_rfid();
+    connectWifi(wifiSsid.c_str(), wifiPassword.c_str());
+    connectMqtt(mqttServer.c_str(), mqttPort.c_str(), mqttUser.c_str(), mqttPassword.c_str());
+    initRfid();
+    initKeypad();
     pairing = false;
   }
   Serial.println("Loop :");
 }
 
-void loop() {
-  if (pairing){
+void loop()
+{
+  if (pairing)
+  {
     server.handleClient();
-  } else{
-    is_wifi_connected(wifi_ssid.c_str(), wifi_password.c_str());
-    check_mqtt(mqtt_server.c_str(), mqtt_port.c_str(), mqtt_user.c_str(), mqtt_password.c_str());
-    if (scanRfidCard()){
-      String pin = "1234";
-      // create a topic with the mac address
+  }
+  else
+  {
+    isWifiConnected(wifiSsid.c_str(), wifiPassword.c_str());
+    checkMqtt(mqttServer.c_str(), mqttPort.c_str(), mqttUser.c_str(), mqttPassword.c_str());
+    switch (machineState)
+    {
+    case enumMachineState::waitingRfid:
+      memset(uid, 0, sizeof(uid));
+      scanRfidCard(uid);
+      if (strlen(uid) > 0)
+      {
+        publishMqtt(cardTopicMqtt, uid);
+        machineState = enumMachineState::waitingCode;
+        resetKeypad();
+        lastActiveTime = millis();
+      }
+      break;
+    case enumMachineState::waitingCode:
+      char key;
+      key = '\0';
+      scanKeypad(&key);
+      switch (key)
+      {
+      case 'C':
+        machineState = enumMachineState::waitingRfid;
+        memset(uid, 0, sizeof(uid));
+        memset(keys, 0, sizeof(keys));
+        Serial.println("Code Cancelled");
+        publishMqtt(displayTopicMqtt, "Code Cancelled");
+        break;
+      case 'D':
+        if (strlen(keys) > 0)
+        {
+          keys[strlen(keys) - 1] = '\0';
+          publishMqtt(displayTopicMqtt, keys);
+          Serial.println("Last key Deleted");
+        }
+        lastActiveTime = millis();
+        break;
+      case '#':
+        Serial.println(strlen(keys));
+        if (strlen(keys) == 4)
+        {
+          char code[14];
+          Serial.println("Code sended");
+          snprintf(code, sizeof(code), "%s:%s", uid, keys);
+          publishMqtt(accessTopicMqtt, code);
+          memset(keys, 0, sizeof(keys));
+          machineState = enumMachineState::waitingRfid;
+        }
+        else
+        {
+          Serial.println("Code Incomplete");
+          publishMqtt(displayTopicMqtt, "Code Incomplete");
+        }
+        lastActiveTime = millis();
+        break;
+      default:
+        if (key != '\0')
+        {
+          if (strlen(keys) < 4)
+          {
+            keys[strlen(keys)] = key;
+          }
+          publishMqtt(displayTopicMqtt, keys);
+          lastActiveTime = millis();
+        }
 
-      // publish();
-      // if (authenticateUser(uid, pin)){
-      //   Serial.println("User Authenticated");
-      // } else {
-      //   Serial.println("User Not Authenticated");
-      // }
-      // sendEncryptedData(uid, test);
-      // Serial.println("RFID Card Detected");
-      // String first_name = read_rfid(1);
-      // Serial.println("First Name : " + first_name);
-      // String uid = read_rfid(0);
-      // Serial.println("UID : " + uid);
-      // if (authenticateUser(uid, first_name)){
-      //   Serial.println("User Authenticated");
-      // } else {
-      //   Serial.println("User Not Authenticated");
-      // }
+        if (millis() - lastActiveTime > RFID_TIMEOUT)
+        {
+          machineState = enumMachineState::waitingRfid;
+          memset(keys, 0, sizeof(keys));
+          publishMqtt(displayTopicMqtt, "Timeout");
+          Serial.println("Timeout");
+        }
+        break;
+      }
+      break;
+    default:
+      Serial.println(machineState);
+      break;
     }
   }
-
-  Serial.print(".");
-  delay(1000);
+  delay(100);
 }

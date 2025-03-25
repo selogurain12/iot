@@ -3,9 +3,9 @@
 
 #include <WiFi.h>
 
-bool connect_wifi(const char *ssid, const char *password);
-void disconnect_wifi();
-bool is_wifi_connected(const char *ssid, const char *password);
-String get_local_ip();
+bool connectWifi(const char *ssid, const char *password);
+void disconnectWifi();
+bool isWifiConnected(const char *ssid, const char *password);
+String getLocalIp();
 
 #endif

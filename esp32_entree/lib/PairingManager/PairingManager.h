@@ -8,7 +8,7 @@
 #include "MqttManager.h"
 #include "ConfigManager.h"
 
-void init_pairing();
-void start_accesspoint();
+void initPairing();
+void startAccessPoint();
 
 #endif

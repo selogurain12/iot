@@ -4,37 +4,34 @@
 
 
 Preferences prefs;
-extern String wifi_ssid;
-extern String wifi_password;
-extern String mqtt_server;
-extern String mqtt_port;
-extern String mqtt_user;
-extern String mqtt_password;
-extern String mqtt_topic;
+extern String wifiSsid;
+extern String wifiPassword;
+extern String mqttServer;
+extern String mqttPort;
+extern String mqttUser;
+extern String mqttPassword;
+extern String mqttTopic;
 
-bool load_config()
+bool loadConfig()
 {
   Serial.println("Loading configuration");
   prefs.begin("config", false);
-  String _wifi_ssid = prefs.getString("wifi_ssid", "");
-  String _wifi_password = prefs.getString("wifi_password", "");
-  String _mqtt_server = prefs.getString("mqtt_server", "");
-  String _mqtt_port = prefs.getString("mqtt_port", "");
-  String _mqtt_user = prefs.getString("mqtt_user", "");
-  String _mqtt_password = prefs.getString("mqtt_password", "");
-  String _mqtt_topic = prefs.getString("mqtt_topic", "");
-
+  String _wifiSsid = prefs.getString("wifiSsid", "");
+  String _wifiPassword = prefs.getString("wifiPassword", "");
+  String _mqttServer = prefs.getString("mqttServer", "");
+  String _mqttPort = prefs.getString("mqttPort", "");
+  String _mqttUser = prefs.getString("mqttUser", "");
+  String _mqttPassword = prefs.getString("mqttPassword", "");
   prefs.end();
   
-  if (_wifi_ssid != "" && _wifi_password != "" && _mqtt_server != "" && _mqtt_port != "" && _mqtt_user != "" && _mqtt_password != "" && _mqtt_topic != "")
+  if (_wifiSsid != "" && _wifiPassword != "" && _mqttServer != "" && _mqttPort != "" && _mqttUser != "" && _mqttPassword != "")
   {
-    wifi_ssid = _wifi_ssid;
-    wifi_password = _wifi_password;
-    mqtt_server = _mqtt_server;
-    mqtt_port = _mqtt_port;
-    mqtt_user = _mqtt_user;
-    mqtt_password = _mqtt_password;
-    mqtt_topic = _mqtt_topic;
+    wifiSsid = _wifiSsid;
+    wifiPassword = _wifiPassword;
+    mqttServer = _mqttServer;
+    mqttPort = _mqttPort;
+    mqttUser = _mqttUser;
+    mqttPassword = _mqttPassword;
     Serial.println("Configuration loaded");
     return true;
   }
@@ -42,41 +39,40 @@ bool load_config()
   return false;
 }
 
-void save_config(String _wifi_ssid, String _wifi_password, String _mqtt_server, String _mqtt_port, String _mqtt_user, String _mqtt_password, String _mqtt_topic)
+void saveConfig(String _wifiSsid, String _wifiPassword, String _mqttServer, String _mqttPort, String _mqttUser, String _mqttPassword)
 {
   prefs.begin("config", false);
-  prefs.putString("wifi_ssid", _wifi_ssid);
-  prefs.putString("wifi_password", _wifi_password);
-  prefs.putString("mqtt_server", _mqtt_server);
-  prefs.putString("mqtt_port", _mqtt_port);
-  prefs.putString("mqtt_user", _mqtt_user);
-  prefs.putString("mqtt_password", _mqtt_password);
-  prefs.putString("mqtt_topic", _mqtt_topic);
+  prefs.putString("wifiSsid", _wifiSsid);
+  prefs.putString("wifiPassword", _wifiPassword);
+  prefs.putString("mqttServer", _mqttServer);
+  prefs.putString("mqttPort", _mqttPort);
+  prefs.putString("mqttUser", _mqttUser);
+  prefs.putString("mqttPassword", _mqttPassword);
   prefs.end();
 }
 
-void reset_config()
+void resetConfig()
 {
   prefs.begin("config", false);
   prefs.clear();
   prefs.end();
 }
 
-void reset_manager(){
+void resetManager(){
   prefs.begin("reset", false);
-  int reset_count = prefs.getInt("reset_count", 0);
-  reset_count++;
+  int resetCount = prefs.getInt("resetCount", 0);
+  resetCount++;
   Serial.print("Reset count: ");
-  Serial.println(reset_count);
+  Serial.println(resetCount);
 
-  prefs.putInt("reset_count", reset_count);
+  prefs.putInt("resetCount", resetCount);
   prefs.end();
 
   
-  if (reset_count >= MAX_RESET_COUNT)
+  if (resetCount >= MAX_RESET_COUNT)
   {
     Serial.println("Resetting configuration");
-    reset_config();
+    resetConfig();
     prefs.begin("reset", false);
     prefs.clear();
     prefs.end();
@@ -84,6 +80,6 @@ void reset_manager(){
 
   delay(1000);
   prefs.begin("reset", false);
-  prefs.putInt("reset_count", 0);
+  prefs.putInt("resetCount", 0);
   prefs.end();
 };
