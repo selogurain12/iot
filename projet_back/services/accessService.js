@@ -1,8 +1,8 @@
 const client = require("./db");
 
-// Vérifier l'accès en utilisant une carte RFID et un code PIN
+// Verify access using an RFID card and a PIN code
 const verifyAccess = async (cardId, pinCode) => {
-    // 1. Vérifier si la carte existe et si elle est active
+    // 1. Check if the card exists and if it is active
     const cardQuery = `
         SELECT r.id, r.card_id, r.is_active, r.user_id
         FROM rfid_cards r
@@ -13,31 +13,31 @@ const verifyAccess = async (cardId, pinCode) => {
     if (cardResult.rows.length === 0) {
         return {
             success: false,
-            message: "Carte RFID non trouvée"
+            message: "RFID card not found"
         };
     }
 
     const rfidCard = cardResult.rows[0];
 
     if (!rfidCard.is_active) {
-        // Enregistrer la tentative d'accès échouée
-        await logAccessAttempt(cardId, rfidCard.user_id, false, "La carte RFID est désactivée");
+        // Log the failed access attempt
+        await logAccessAttempt(cardId, rfidCard.user_id, false, "RFID card is disabled");
         return {
             success: false,
-            message: "Carte RFID désactivée"
+            message: "RFID card disabled"
         };
     }
 
     if (!rfidCard.user_id) {
-        // Enregistrer la tentative d'accès échouée
-        await logAccessAttempt(cardId, null, false, "Aucun utilisateur associé à cette carte");
+        // Log the failed access attempt
+        await logAccessAttempt(cardId, null, false, "No user associated with this card");
         return {
             success: false,
-            message: "Carte RFID non associée à un utilisateur"
+            message: "RFID card not associated with a user"
         };
     }
 
-    // 2. Vérifier si l'utilisateur a un code d'accès actif correspondant au code PIN fourni
+    // 2. Check if the user has an active access code matching the provided PIN code
     const codeQuery = `
         SELECT a.id, a.code, a.is_active, u.id as user_id, u.name, u.firstname
         FROM access_codes a
@@ -47,32 +47,32 @@ const verifyAccess = async (cardId, pinCode) => {
     const codeResult = await client.query(codeQuery, [rfidCard.user_id, pinCode]);
 
     if (codeResult.rows.length === 0) {
-        // Enregistrer la tentative d'accès échouée
-        await logAccessAttempt(cardId, rfidCard.user_id, false, "Code PIN invalide");
+        // Log the failed access attempt
+        await logAccessAttempt(cardId, rfidCard.user_id, false, "Invalid PIN code");
         return {
             success: false,
-            message: "Code PIN invalide"
+            message: "Invalid PIN code"
         };
     }
 
     const accessCode = codeResult.rows[0];
 
     if (!accessCode.is_active) {
-        // Enregistrer la tentative d'accès échouée
-        await logAccessAttempt(cardId, rfidCard.user_id, false, "Code d'accès désactivé");
+        // Log the failed access attempt
+        await logAccessAttempt(cardId, rfidCard.user_id, false, "Access code disabled");
         return {
             success: false,
-            message: "Code d'accès désactivé"
+            message: "Access code disabled"
         };
     }
 
-    // 3. Si tout est valide, accès autorisé
-    // Enregistrer la tentative d'accès réussie
-    await logAccessAttempt(cardId, rfidCard.user_id, true, "Accès autorisé");
+    // 3. If everything is valid, access authorized
+    // Log the successful access attempt
+    await logAccessAttempt(cardId, rfidCard.user_id, true, "Access authorized");
 
     return {
         success: true,
-        message: `Bienvenue, ${accessCode.firstname} ${accessCode.name}`,
+        message: `Welcome, ${accessCode.firstname} ${accessCode.name}`,
         userData: {
             user_id: accessCode.user_id,
             name: accessCode.name,
@@ -81,14 +81,14 @@ const verifyAccess = async (cardId, pinCode) => {
     };
 };
 
-// Fonction pour enregistrer les tentatives d'accès
+// Function to log access attempts
 const logAccessAttempt = async (identifier, userId, success, message) => {
     const query = `
         INSERT INTO access_logs 
         (access_type, identifier, user_id, success, created_at) 
         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`;
 
-    // Utiliser 'rfid' comme type d'accès (selon la contrainte)
+    // Use 'rfid' as access type (according to constraint)
     await client.query(query, ['rfid', identifier, userId, success]);
 };
 

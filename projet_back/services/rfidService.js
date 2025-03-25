@@ -21,7 +21,7 @@ const createRfid = async (rfidData) => {
     if (user_id) {
         const userExists = await client.query('SELECT id FROM users WHERE id = $1', [user_id]);
         if (userExists.rows.length === 0) {
-            throw new Error(`L'utilisateur avec l'ID ${user_id} n'existe pas`);
+            throw new Error(`User with ID ${user_id} does not exist`);
         }
     }
 
@@ -71,7 +71,7 @@ const updateRfid = async (id, rfidData) => {
 
     // Si aucun champ à mettre à jour n'est fourni
     if (setClauses.length === 0) {
-        throw new Error("Aucune donnée fournie pour la mise à jour");
+        throw new Error("No data provided for update");
     }
 
     // Construire la requête SQL
@@ -81,7 +81,7 @@ const updateRfid = async (id, rfidData) => {
     const result = await client.query(query, values);
 
     if (result.rows.length === 0) {
-        throw new Error("Carte RFID non trouvée");
+        throw new Error("RFID card not found");
     }
 
     // Si l'utilisateur est mis à jour, mettre à jour l'association user_rfid
@@ -105,7 +105,7 @@ const deleteRfid = async (id) => {
     const result = await client.query(query, [id]);
 
     if (result.rows.length === 0) {
-        throw new Error("Carte RFID non trouvée");
+        throw new Error("RFID card not found");
     }
 
     return result.rows[0];
