@@ -6,18 +6,18 @@ extern char hostname[25];
 const char* PAIRING_PASSWORD = "$yRTceLd7R$y39Bo";
 const IPAddress PAIRING_IPADDRESS(192, 168, 4, 1);
 
-void start_accesspoint(){
+void startAccesspoint(){
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(PAIRING_IPADDRESS, PAIRING_IPADDRESS, IPAddress(255, 255, 255, 0));
   WiFi.softAP(hostname, PAIRING_PASSWORD);
-  Serial.println("Access Point started with Hostname: " + String(hostname));
+  Serial.println("Access Point started with hostName: " + String(hostname));
   Serial.print("IP Address: ");
   Serial.println(WiFi.softAPIP());
 }
 
-void init_pairing()
+void initPairing()
 {
-  start_accesspoint();
+  startAccesspoint();
 
   server.on("/", HTTP_GET, [](){
     Serial.println("Root page");
@@ -57,44 +57,41 @@ void init_pairing()
       server.send(400, "text/plain", "Invalid JSON");
       return;
     }
-    String _wifi_ssid = doc["wifi_ssid"];
-    String _wifi_password = doc["wifi_password"];
-    String _mqtt_server = doc["mqtt_server"];
-    String _mqtt_port = doc["mqtt_port"];
-    String _mqtt_user = doc["mqtt_user"];
-    String _mqtt_password = doc["mqtt_password"];
-    String _mqtt_topic = doc["mqtt_topic"];
+    String _wifiSsid = doc["wifiSsid"];
+    String _wifiPassword = doc["wifiPassword"];
+    String _mqttServer = doc["mqttServer"];
+    String _mqttPort = doc["mqttPort"];
+    String _mqttUser = doc["mqttUser"];
+    String _mqttPassword = doc["mqttPassword"];
 
     Serial.print("Wifi SSID: ");
-    Serial.println(_wifi_ssid);
+    Serial.println(_wifiSsid);
     Serial.print("Wifi Password: ");
-    Serial.println(_wifi_password);
+    Serial.println(_wifiPassword);
     Serial.print("MQTT Server: ");
-    Serial.println(_mqtt_server);
+    Serial.println(_mqttServer);
     Serial.print("MQTT Port: ");
-    Serial.println(_mqtt_port);
+    Serial.println(_mqttPort);
     Serial.print("MQTT User: ");
-    Serial.println(_mqtt_user);
+    Serial.println(_mqttUser);
     Serial.print("MQTT Password: ");
-    Serial.println(_mqtt_password);
-    Serial.print("MQTT Topic: ");
-    Serial.println(_mqtt_topic);
+    Serial.println(_mqttPassword);
 
-    if (!connect_wifi(_wifi_ssid.c_str(), _wifi_password.c_str()))
+    if (!connectWifi(_wifiSsid.c_str(), _wifiPassword.c_str()))
     {
       server.send(400, "text/plain", "Wifi connection failed");
-      start_accesspoint();
+      startAccesspoint();
       return;
     }
 
-    if (!connect_mqtt(_mqtt_server.c_str(), _mqtt_port.c_str(), _mqtt_user.c_str(), _mqtt_password.c_str()))
+    if (!connectMqtt(_mqttServer.c_str(), _mqttPort.c_str(), _mqttUser.c_str(), _mqttPassword.c_str()))
     {
       server.send(400, "text/plain", "MQTT connection failed");
       return;
     }
 
-    save_config(_wifi_ssid, _wifi_password, _mqtt_server, _mqtt_port, _mqtt_user, _mqtt_password, _mqtt_topic);
-    publish("arrivals",hostname);
+    saveConfig(_wifiSsid, _wifiPassword, _mqttServer, _mqttPort, _mqttUser, _mqttPassword);
+    publishMqtt("arrivals",hostname);
     server.send(200, "text/plain", "Configuration saved, rebooting");
     delay(1000);
     ESP.restart();

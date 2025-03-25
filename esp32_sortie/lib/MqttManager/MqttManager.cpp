@@ -2,21 +2,26 @@
 #include "ServoManager.h"
 #include "ScreenManager.h"
 
-extern hostname[25];
+extern char hostname[25];
 WiFiClient client;
 PubSubClient mqtt(client);
 
-bool connect_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mqtt_user, const char *mqtt_password)
+bool connectMqtt(const char *mqttServer, const char *mqttPort, const char *mqttUser, const char *mqttPassword)
 {
+    String out = "/out/";
+    String topicAccess = out + hostname + "/access";
+    String topicDisplay = out + hostname + "/display";
     Serial.print("Connecting to MQTT : ");
-    Serial.print(mqtt_server);
+    Serial.print(mqttServer);
     Serial.print(":");
-    Serial.println(mqtt_port);
+    Serial.println(mqttPort);
 
-    mqtt.setServer(mqtt_server, atoi(mqtt_port));
-    mqtt.setCallback(callback);
+    mqtt.setServer(mqttServer, atoi(mqttPort));
+    mqtt.setCallback(callbackMqtt);
+    //mqtt.setCallback(callbackMqtt(topicDisplay.c_str()));
+
     int j = 0;
-    while (!mqtt.connect(hostname, mqtt_user, mqtt_password) && j < 10)
+    while (!mqtt.connect(hostname, mqttUser, mqttPassword) && j < 10)
     {
     delay(500);
     Serial.print(".");
@@ -33,12 +38,12 @@ bool connect_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mq
     return true;
 }
 
-bool check_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mqtt_user, const char *mqtt_password) {
+bool checkMqtt(const char *mqttServer, const char *mqttPort, const char *mqttUser, const char *mqttPassword) {
     if (!mqtt.connected()) {
         Serial.println("\nMQTT deconnected");
         mqtt.disconnect();
         delay(1000);
-        if (connect_mqtt(mqtt_server, mqtt_port, mqtt_user, mqtt_password)) {
+        if (connectMqtt(mqttServer, mqttPort, mqttUser, mqttPassword)) {
             Serial.println("MQTT reconnected");
             return true;
         } else {
@@ -52,24 +57,26 @@ bool check_mqtt(const char *mqtt_server, const char *mqtt_port, const char *mqtt
     return true;
 }
 
-void publish(const char *topic, const char *message) {
+void publishMqtt(const char *topic, const char *message) {
     mqtt.publish(topic, message);
 }
 
-void subscribe(const char *topic) {
+void subscribeMqtt(const char *topic) {
     mqtt.subscribe(topic);
 }
 
-void callback(char *topic, byte *payload, unsigned int length) {
+void callbackMqtt(char *topic,byte *payload, unsigned int length) {
     String retour;
     for (int i = 0; i < length; i++)
     {
         retour += (char)payload[i];
     }
-    if (retour == "true"){
-        turn();
-        show_screen("Success");
+    String out = "/out/";
+    String topicAccess = out + hostname + "/access";
+    String topicMqtt = topic;
+    if (topicMqtt == topicAccess && retour.equals("1")){
+        openServo();
     }else{
-        show_screen("Access Denied");
+        loopScreen(retour);
     }
 }

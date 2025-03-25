@@ -4,16 +4,16 @@ static const int servoPin = 13;
 
 Servo servo1;
 
-void init_servo() {
+void initServo() {
   servo1.attach(servoPin, 0, 4000);
 }
 
-void turn()
+void openServo()
 {
     servo1.write(180);
 }
 
-void reset_servo()
+void resetServo()
 {
     servo1.write(0);
 }

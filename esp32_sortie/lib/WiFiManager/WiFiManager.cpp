@@ -1,6 +1,6 @@
 #include "WiFiManager.h"
 
-bool connect_wifi(const char *ssid, const char *password){
+bool connectWifi(const char *ssid, const char *password){
   Serial.print("\nConnecting to WiFi : ");
   Serial.println(ssid);
   WiFi.mode(WIFI_STA);
@@ -23,10 +23,10 @@ bool connect_wifi(const char *ssid, const char *password){
   return true;  
 }
 
-bool check_wifi(const char *ssid, const char *password) {
+bool checkWifi(const char *ssid, const char *password) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi deconnected");
-    if (connect_wifi(ssid, password)){
+    if (connectWifi(ssid, password)){
       Serial.println("WiFi reconnected");
       return true;
     } else {

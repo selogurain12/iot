@@ -12,13 +12,18 @@
 
 
 
-String wifi_ssid;
-String wifi_password;
-String mqtt_server;
-String mqtt_port;
-String mqtt_user;
-String mqtt_password;
-String mqtt_topic;
+String wifiSsid;
+String wifiPassword;
+String mqttServer;
+String mqttPort;
+String mqttUser;
+String mqttPassword;
+unsigned long previousMillisScreen;
+unsigned long previousMillisServo;
+
+const long intervalScreen = 10000;
+const long intervalServo = 10000;
+
 char hostname[25];
 
 WebServer server(80);
@@ -37,22 +42,27 @@ void generateHostname() {
 void setup() {
   Serial.begin(115200);
   generateHostname();
-  init_screen();
-  reset_manager();
-  init_servo();
-  reset_servo();
+  initScreen();
+  resetManager();
+  initServo();
+  resetServo();
   
-  if (!load_config())
+  if (!loadConfig())
   {
-    init_pairing();
+    initPairing();
     pairing = true;
   }
   else
   {
-    connect_wifi(wifi_ssid.c_str(), wifi_password.c_str());
-    connect_mqtt(mqtt_server.c_str(), mqtt_port.c_str(), mqtt_user.c_str(), mqtt_password.c_str());
+    connectWifi(wifiSsid.c_str(), wifiPassword.c_str());
+    connectMqtt(mqttServer.c_str(), mqttPort.c_str(), mqttUser.c_str(), mqttPassword.c_str());
     pairing = false;
-    subscribe(mqtt_topic.c_str());
+    String out = "/out/";
+    String topicAccess = out + hostname + "/access";
+    String topicDisplay = out + hostname + "/display";
+
+    subscribeMqtt(topicAccess.c_str());
+    subscribeMqtt(topicDisplay.c_str());
   }
   Serial.println("Loop :");
 }
@@ -61,10 +71,17 @@ void loop() {
   if (pairing){
     server.handleClient();
   } else{
-    check_wifi(wifi_ssid.c_str(), wifi_password.c_str());
-    check_mqtt(mqtt_server.c_str(), mqtt_port.c_str(), mqtt_user.c_str(), mqtt_password.c_str());
+    checkWifi(wifiSsid.c_str(), wifiPassword.c_str());
+    checkMqtt(mqttServer.c_str(), mqttPort.c_str(), mqttUser.c_str(), mqttPassword.c_str());
   }
-  Serial.print(".");
-  delay(1000);
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillisScreen >= intervalScreen) {
+    previousMillisScreen = currentMillis;
+    clearScreen();
+  }
+  if (currentMillis - previousMillisServo >= intervalServo) {
+    previousMillisServo = currentMillis;
+    resetServo();
+  }
 }
 

@@ -2,6 +2,8 @@
 #define SCREEN_MANAGER_H
 
 #include "ScreenManager.h"
-void show_screen(String texte);
-void init_screen();
+void showScreen(String texte);
+void initScreen();
+void clearScreen();
+void loopScreen(String texte);
 #endif

@@ -3,7 +3,7 @@
 
 #include <WiFi.h>
 
-bool connect_wifi(const char *ssid, const char *password);
-bool check_wifi(const char *ssid, const char *password);
+bool connectWifi(const char *ssid, const char *password);
+bool checkWifi(const char *ssid, const char *password);
 
 #endif

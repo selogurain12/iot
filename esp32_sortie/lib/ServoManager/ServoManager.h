@@ -4,7 +4,7 @@
 #include <ESP32Servo.h>
 
 
-void turn();
-void reset_servo();
-void init_servo();
+void openServo();
+void resetServo();
+void initServo();
 #endif
