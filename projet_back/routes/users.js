@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, login, verifyToken, verifyTokenAdmin, updateUser, deleteUser } = require('../services/usersService');
+const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, login, verifyToken, verifyTokenAdmin, updateUser, deleteUser, decryptAES } = require('../services/usersService');
 const errorHandler = require("../utils/errorHandler");
 
 /**

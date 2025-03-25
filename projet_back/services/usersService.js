@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
-
 // Récupère un utilisateur via son ID en base de données
 const getUserByIdBd = async (id) => {
     const user = await client.query('SELECT * FROM users WHERE id = $1::uuid', [id]);
@@ -90,10 +89,10 @@ const deleteUser = async (id) => {
 }
 
 // Login a user and generate a token
-const login = async ({ identifier, password }) => {
+const login = async ({ email, password }) => {
     try {
-        console.log(identifier + ' ' + password);
-        const result = await client.query('SELECT * FROM users WHERE email = $1', [identifier]);
+        console.log(email + ' ' + password);
+        const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
         if (result.rows.length === 0) {
             throw new Error('Invalid email or password');
         }
