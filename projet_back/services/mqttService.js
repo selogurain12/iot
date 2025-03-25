@@ -143,11 +143,6 @@ const subscribeToInputModule = (inModule) => {
         handleInputModuleMessage(inModule.id, topic, message);
     });
 
-    // Topic pour les messages de statut
-    subscribe(`${topicBase}/status`, (topic, message) => {
-        console.log(`Statut du module ${inModule.hostname}: ${message}`);
-    });
-
     console.log(`✅ Abonnement aux topics du module ${inModule.hostname}`);
 };
 

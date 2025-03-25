@@ -17,6 +17,14 @@ const getAllRfids = async () => {
 const createRfid = async (rfidData) => {
     const { card_id, user_id, is_active = true } = rfidData;
 
+    // Vérifier si l'utilisateur existe si un user_id est fourni
+    if (user_id) {
+        const userExists = await client.query('SELECT id FROM users WHERE id = $1', [user_id]);
+        if (userExists.rows.length === 0) {
+            throw new Error(`L'utilisateur avec l'ID ${user_id} n'existe pas`);
+        }
+    }
+
     // Insérer la carte RFID
     const cardQuery = 'INSERT INTO rfid_cards (card_id, user_id, is_active) VALUES ($1, $2, $3) RETURNING *';
     const cardValues = [card_id, user_id, is_active];
