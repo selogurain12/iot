@@ -112,16 +112,7 @@ const subscribeToInputModule = (inModule) => {
 
     // S'abonner au topic principal
     const specificTopic = `ESP32_I_${macAddress}`;
-    subscribe(specificTopic, (topic, message) => {
-        console.log(`Message du module d'entrée ${inModule.hostname}: ${message}`);
-        handleInputModuleMessage(inModule.id, message);
-    });
-
-    // S'abonner au topic de statut
-    subscribe(`ESP32_I_${macAddress}/status`, (topic, message) => {
-        console.log(`Statut du module d'entrée ${inModule.hostname}: ${message}`);
-        // Traitement du message de statut...
-    });
+    subscribe(specificTopic, () => { });
 
     console.log(`✅ Abonnement aux topics du module ${inModule.hostname}`);
 };
@@ -206,12 +197,6 @@ const setupDefaultSubscriptions = () => {
                 // mais on garde l'ID pour pouvoir lui envoyer des commandes ultérieurement
                 console.log(`Module de sortie ${hostname} enregistré (pas d'abonnement)`);
             }
-
-            // Répondre au module pour confirmer l'enregistrement
-            publish(`esp32/confirm/${macAddress}`, {
-                status: "registered",
-                id: moduleId
-            });
 
         } catch (error) {
             console.error('❌ Erreur lors du traitement du nouveau module:', error);

@@ -55,27 +55,6 @@ router.post('/publish', (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /mqtt/door/open:
- *   post:
- *     summary: Ouvrir la porte via MQTT
- *     tags: [MQTT]
- *     responses:
- *       200:
- *         description: Commande envoyée avec succès
- *       500:
- *         description: Erreur serveur
- */
-router.post('/door/open', (req, res) => {
-    try {
-        publish('door/command', { action: 'open', timestamp: new Date().toISOString() });
-        res.status(200).json({ success: true, message: 'Commande d\'ouverture envoyée' });
-    } catch (error) {
-        errorHandler(res, error);
-    }
-});
-
 
 
 
