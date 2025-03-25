@@ -1,6 +1,7 @@
 const mqtt = require('mqtt');
 const dotenv = require('dotenv');
 const pgClient = require('./db');
+const { verifyAccess } = require('./accessService');
 
 dotenv.config();
 
@@ -17,7 +18,9 @@ const topicCallbacks = {};
 const options = {
     clientId: MQTT_CLIENT_ID,
     clean: true,
-    reconnectPeriod: 5000
+    reconnectPeriod: 5000,  // Gardez cette valeur pour la reconnexion en cas de perte réelle
+    keepalive: 60,          // Augmenter le keepalive à 60 secondes (valeur par défaut)
+    rejectUnauthorized: false
 };
 
 // Ajout des identifiants si fournis
@@ -31,12 +34,17 @@ const client = mqtt.connect(MQTT_BROKER, options);
 
 // Gestion des événements de connexion
 client.on('connect', () => {
-    console.log('✅ Connecté au broker MQTT');
+    console.log('✅ Connecté au broker MQTT avec l\'ID client:', MQTT_CLIENT_ID);
 
-    // S'abonner automatiquement aux topics au démarrage
-    setupDefaultSubscriptions();
-    // S'abonner aux modules d'entrée existants
-    subscribeToAllInputModules();
+    // S'abonner aux topics une seule fois lors de la connexion initiale
+    if (!client.initialSubscriptionsDone) {
+        console.log('🔔 Configuration des abonnements initiaux...');
+        setupDefaultSubscriptions();
+        subscribeToAllInputModules();
+        client.initialSubscriptionsDone = true;
+    } else {
+        console.log('⚠️ Reconnecté au broker MQTT, abonnements déjà configurés');
+    }
 });
 
 client.on('error', (error) => {
@@ -45,6 +53,18 @@ client.on('error', (error) => {
 
 client.on('reconnect', () => {
     console.log('🔄 Tentative de reconnexion MQTT');
+});
+
+client.on('close', () => {
+    console.log('⚠️ Connexion au broker MQTT fermée');
+});
+
+client.on('offline', () => {
+    console.log('🔌 Client MQTT déconnecté');
+});
+
+client.on('end', () => {
+    console.log('🛑 Connexion MQTT terminée');
 });
 
 /**
@@ -110,9 +130,23 @@ const subscribeToInputModule = (inModule) => {
     // Extraire l'adresse MAC du hostname (ESP32_I_XXXX)
     const macAddress = inModule.hostname.split('_')[2];
 
-    // S'abonner au topic principal
-    const specificTopic = `ESP32_I_${macAddress}`;
-    subscribe(specificTopic, () => { });
+    // S'abonner aux différents topics du module d'entrée
+    const topicBase = `/in/${inModule.hostname}`;
+
+    // Topic pour les requêtes d'accès
+    subscribe(`${topicBase}/access`, (topic, message) => {
+        handleInputModuleMessage(inModule.id, topic, message);
+    });
+
+    // Topic pour les entrées de code PIN
+    subscribe(`${topicBase}/pin`, (topic, message) => {
+        handleInputModuleMessage(inModule.id, topic, message);
+    });
+
+    // Topic pour les messages de statut
+    subscribe(`${topicBase}/status`, (topic, message) => {
+        console.log(`Statut du module ${inModule.hostname}: ${message}`);
+    });
 
     console.log(`✅ Abonnement aux topics du module ${inModule.hostname}`);
 };
@@ -205,48 +239,68 @@ const setupDefaultSubscriptions = () => {
 };
 
 // Gestion des messages des modules d'entrée
-const handleInputModuleMessage = async (moduleId, message) => {
-    // Logique pour traiter les messages des lecteurs d'entrée
+const handleInputModuleMessage = async (moduleId, topic, message) => {
     try {
-        const data = JSON.parse(message);
-        console.log(`Module d'entrée ${moduleId} a envoyé:`, data);
+        console.log(`Module ${moduleId} a envoyé sur ${topic}: ${message}`);
 
-        // Si c'est une demande d'accès avec RFID
-        if (data.type === 'access_request' && data.card_id) {
-            // Vérifier si la carte est valide et active
-            const { verifyAccess } = require('./rfidService');
-            const accessResult = await verifyAccess(data.card_id, data.pin_code || '');
+        // Extraire l'identifiant du module depuis le topic
+        const topicParts = topic.split('/');
+        const hostname = topicParts[2]; 
+
+        // Récupérer le module apparié (sortie)
+        const moduleResult = await pgClient.query(
+            'SELECT m.*, p.hostname as pair_hostname FROM module m ' +
+            'LEFT JOIN module p ON m.pair_id = p.id ' +
+            'WHERE m.hostname = $1',
+            [hostname]
+        );
+
+        if (moduleResult.rows.length === 0) {
+            console.error(`❌ Module inconnu: ${hostname}`);
+            return;
+        }
+
+        const module = moduleResult.rows[0];
+        const outputHostname = module.pair_hostname;
+
+        // Si pas de module de sortie apparié
+        if (!outputHostname) {
+            console.error(`❌ Module ${hostname} n'a pas de module de sortie apparié`);
+            return;
+        }
+
+        // Traiter les différents types de messages selon le topic
+        if (topic.includes('/access')) {
+            // Format attendu: uuid:pin
+            const parts = message.split(':');
+            if (parts.length !== 2) {
+                console.error(`❌ Format de message d'accès invalide: ${message}`);
+                return;
+            }
+
+            const cardId = parts[0];
+            const pinCode = parts[1];
+
+            // Vérifier l'accès
+            const accessResult = await verifyAccess(cardId, pinCode);
 
             console.log(`Résultat de la vérification d'accès:`, accessResult);
 
-            // Si accès autorisé et module apparié, envoyer commande d'ouverture
-            if (accessResult.success) {
-                const moduleQuery = await pgClient.query(
-                    'SELECT pair_id FROM module WHERE id = $1',
-                    [moduleId]
-                );
+            // Envoyer la réponse au module de sortie
+            publish(`/out/${outputHostname}/access`, accessResult.success ? "1" : "0");
 
-                if (moduleQuery.rows.length > 0 && moduleQuery.rows[0].pair_id) {
-                    const outputModuleId = moduleQuery.rows[0].pair_id;
-                    await sendCommandToOutputModule(outputModuleId, {
-                        action: 'open',
-                        user_id: accessResult.userData ? accessResult.userData.user_id : null,
-                        timestamp: new Date().toISOString()
-                    });
-                }
+            // Si accès autorisé, envoyer le message de bienvenue
+            if (accessResult.success && accessResult.userData) {
+                const welcomeMessage = `Bonjour, ${accessResult.userData.firstname} ${accessResult.userData.name}`;
+                publish(`/out/${outputHostname}/display`, welcomeMessage);
+            } else {
+                // Message d'erreur
+                publish(`/out/${outputHostname}/display`, accessResult.message || "Accès refusé");
             }
-
-            // Envoyer réponse au module d'entrée
-            const moduleInfo = await pgClient.query('SELECT * FROM module WHERE id = $1', [moduleId]);
-            if (moduleInfo.rows.length > 0) {
-                const macAddress = moduleInfo.rows[0].hostname.split('_')[2];
-                publish(`ESP32_I_${macAddress}/response`, {
-                    type: 'access_response',
-                    request_id: data.request_id,
-                    granted: accessResult.success,
-                    message: accessResult.message
-                });
-            }
+        }
+        else if (topic.includes('/pin')) {
+            // On peut aussi l'afficher
+            publish(`/out/${outputHostname}/display`, message);
         }
     } catch (error) {
         console.error(`❌ Erreur de traitement du message d'entrée:`, error);

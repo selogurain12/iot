@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getAllRfids, createRfid, updateRfid, deleteRfid, getRfidByCardId, verifyAccess } = require('../services/rfidService');
+const { getAllRfids, createRfid, updateRfid, deleteRfid, getRfidByCardId } = require('../services/rfidService');
+const { verifyAccess } = require('../services/accessService');
 const errorHandler = require("../utils/errorHandler");
 
 /**
