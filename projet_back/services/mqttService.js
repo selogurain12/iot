@@ -9,8 +9,7 @@ dotenv.config();
 const MQTT_BROKER = process.env.MQTT_BROKER || "mqtt://test.mosquitto.org";
 const MQTT_USERNAME = process.env.MQTT_USERNAME;
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD;
-const MQTT_CLIENT_ID = process.env.MQTT_CLIENT_ID || `mqtt_client_${Math.random().toString(16).slice(2, 10)}`;
-
+const MQTT_CLIENT_ID = `backend_${Math.random().toString(16).substring(2, 10)}_${Date.now()}`;
 // Structure pour stocker les callbacks de messages par sujet
 const topicCallbacks = {};
 
@@ -240,7 +239,7 @@ const handleInputModuleMessage = async (moduleId, topic, message) => {
 
         // Extraire l'identifiant du module depuis le topic
         const topicParts = topic.split('/');
-        const hostname = topicParts[2]; 
+        const hostname = topicParts[2];
 
         // Récupérer le module apparié (sortie)
         const moduleResult = await pgClient.query(
