@@ -7,10 +7,10 @@ const client = new Client({
 
 client.connect()
   .then(() => {
-    console.log("✅ Connecté à PostgreSQL");
+    console.log("✅ Connected to PostgreSQL");
   })
   .catch(err => {
-    console.error("❌ Erreur de connexion à PostgreSQL :", err);
+    console.error("❌ PostgreSQL connection error:", err);
   });
 
 module.exports = client; 

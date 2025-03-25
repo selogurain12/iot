@@ -7,11 +7,11 @@ const errorHandler = require("../utils/errorHandler");
  * @swagger
  * /users:
  *   get:
- *     summary: Récupérer tous les utilisateurs
- *     tags: [Utilisateurs]
+ *     summary: Get all users
+ *     tags: [Users]
  *     responses:
  *       200:
- *         description: Liste de tous les utilisateurs
+ *         description: List of all users
  *         content:
  *           application/json:
  *             schema:
@@ -38,13 +38,13 @@ router.get("/", verifyTokenAdmin, async (req, res) => {
     }
 });
 
-// Route pour ajouter un utilisateur
+// Route to add a user
 /**
  * @swagger
  * /users/register:
  *   post:
- *     summary: Créer un nouvel utilisateur
- *     tags: [Utilisateurs]
+ *     summary: Create a new user
+ *     tags: [Users]
  *     requestBody:
  *       required: true
  *       content:
@@ -71,7 +71,7 @@ router.get("/", verifyTokenAdmin, async (req, res) => {
  *                 example: "password123"
  *     responses:
  *       201:
- *         description: Utilisateur créé avec succès et connecté
+ *         description: User successfully created and logged in
  *         content:
  *           application/json:
  *             schema:
@@ -96,17 +96,17 @@ router.get("/", verifyTokenAdmin, async (req, res) => {
  *                   type: string
  *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *       400:
- *         description: Requête invalide ou utilisateur déjà existant
+ *         description: Invalid request or user already exists
  *       500:
- *         description: Erreur serveur
+ *         description: Server error
  */
 router.post("/register", async (req, res) => {
     try {
         const { email, firstname, name, password } = req.body;
-        if (!email) return res.status(400).json({ error: "email est requis" });
-        if (!firstname) return res.status(400).json({ error: "firstname est requis" });
-        if (!name) return res.status(400).json({ error: "name est requis" });
-        if (!password) return res.status(400).json({ error: "password est requis" });
+        if (!email) return res.status(400).json({ error: "email is required" });
+        if (!firstname) return res.status(400).json({ error: "firstname is required" });
+        if (!name) return res.status(400).json({ error: "name is required" });
+        if (!password) return res.status(400).json({ error: "password is required" });
 
         const result = await createUser({ email, firstname, name, password });
         res.status(201).json(result);
@@ -119,15 +119,15 @@ router.post("/register", async (req, res) => {
  * @swagger
  * /users/update/{id}:
  *   put:
- *     summary: Mettre à jour un utilisateur
- *     tags: [Utilisateurs]
+ *     summary: Update a user
+ *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID de l'utilisateur à mettre à jour
+ *         description: ID of the user to update
  *     requestBody:
  *       required: true
  *       content:
@@ -149,7 +149,7 @@ router.post("/register", async (req, res) => {
  *                 example: "password123"
  *     responses:
  *       200:
- *         description: Utilisateur mis à jour avec succès
+ *         description: User successfully updated
  *         content:
  *           application/json:
  *             schema:
@@ -168,22 +168,22 @@ router.post("/register", async (req, res) => {
  *                   type: string
  *                   example: "Doe"
  *       400:
- *         description: Requête invalide
+ *         description: Invalid request
  *       404:
- *         description: Utilisateur non trouvé
+ *         description: User not found
  *       500:
- *         description: Erreur serveur
+ *         description: Server error
  */
 router.put("/update/:id", async (req, res) => {
     try {
         const { email, firstname, name, password } = req.body;
-        if (!email) return res.status(400).json({ error: "email est requis" });
-        if (!firstname) return res.status(400).json({ error: "firstname est requis" });
-        if (!name) return res.status(400).json({ error: "name est requis" });
-        if (!password) return res.status(400).json({ error: "password est requis" });
+        if (!email) return res.status(400).json({ error: "email is required" });
+        if (!firstname) return res.status(400).json({ error: "firstname is required" });
+        if (!name) return res.status(400).json({ error: "name is required" });
+        if (!password) return res.status(400).json({ error: "password is required" });
 
         const user = await getUserByIdBd(req.params.id);
-        if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
+        if (!user) return res.status(404).json({ error: "User not found" });
 
         const updatedUser = await updateUser(req.params.id, email, firstname, name, password);
         res.json(updatedUser);
@@ -196,27 +196,27 @@ router.put("/update/:id", async (req, res) => {
  * @swagger
  * /users/delete/{id}:
  *   delete:
- *     summary: Supprimer un utilisateur
- *     tags: [Utilisateurs]
+ *     summary: Delete a user
+ *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID de l'utilisateur à supprimer
+ *         description: ID of the user to delete
  *     responses:
  *       204:
- *         description: Utilisateur supprimé avec succès
+ *         description: User successfully deleted
  *       404:
- *         description: Utilisateur non trouvé
+ *         description: User not found
  *       500:
- *         description: Erreur serveur
+ *         description: Server error
  */
 router.delete("/delete/:id", async (req, res) => {
     try {
         const user = await getUserByIdBd(req.params.id);
-        if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
+        if (!user) return res.status(404).json({ error: "User not found" });
 
         deleteUser(req.params.id);
         res.status(204).send();
@@ -225,10 +225,10 @@ router.delete("/delete/:id", async (req, res) => {
     }
 });
 
-// Route pour récupérer un utilisateur par ID
+// Route to get a user by ID
 router.get("/:id", verifyToken, async (req, res) => {
     try {
-        if (!req.params.id) return res.status(400).json({ error: "l'id est requis" });
+        if (!req.params.id) return res.status(400).json({ error: "id is required" });
         const user = await getUserByIdBd(req.params.id);
         if (user) {
             res.json(user);
@@ -240,7 +240,7 @@ router.get("/:id", verifyToken, async (req, res) => {
     }
 });
 
-// Route pour récupérer une liste d'utilisateurs par email
+// Route to get a list of users by email
 router.get("/email/:email", verifyToken, async (req, res) => {
     try {
         const users = await getUsersByEmail(req.params.email);
@@ -250,7 +250,7 @@ router.get("/email/:email", verifyToken, async (req, res) => {
     }
 });
 
-// Route pour vérifier si un utilisateur existe
+// Route to check if a user exists
 router.get("/exists/:email", async (req, res) => {
     try {
         const exists = await userExists(req.params.email);
@@ -260,7 +260,7 @@ router.get("/exists/:email", async (req, res) => {
     }
 });
 
-// Route pour se connecter
+// Route for login
 router.post('/login', async (req, res) => {
     try {
         const token = await login(req.body);
