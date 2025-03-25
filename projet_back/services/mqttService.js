@@ -138,7 +138,7 @@ const subscribeToInputModule = (inModule) => {
     });
 
     // Topic pour les entrées de code PIN
-    subscribe(`${topicBase}/pin`, (topic, message) => {
+    subscribe(`${topicBase}/display`, (topic, message) => {
         handleInputModuleMessage(inModule.id, topic, message);
     });
 
@@ -292,7 +292,7 @@ const handleInputModuleMessage = async (moduleId, topic, message) => {
                 publish(`/out/${outputHostname}/display`, accessResult.message || "Accès refusé");
             }
         }
-        else if (topic.includes('/pin')) {
+        else if (topic.includes('/display')) {
             // On peut aussi l'afficher
             publish(`/out/${outputHostname}/display`, message);
         }
