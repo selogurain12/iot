@@ -48,28 +48,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }, [navigate]);
 
     useEffect(() => {
-        const storedToken = localStorage.getItem("authToken");
-        const storedUser = localStorage.getItem("authUser");
-        const expiresAt = localStorage.getItem("authExpiresAt");
-    
-        if (storedToken && storedUser && expiresAt) {
-            const now = new Date().getTime();
-            if (now > parseInt(expiresAt, 10)) {
-                signOut();
-            } else {
-                setToken(storedToken);
-    
-                // Check if storedUser is valid JSON
-                try {
-                    const userData = JSON.parse(storedUser);
-                    setUser(userData);
-                } catch (error) {
-                    console.error("Error parsing stored user:", error);
-                    signOut(); // If parsing fails, log out the user
-                }
-            }
-        }
-    }, [signOut]);    
+		const storedToken = localStorage.getItem("authToken");
+		const storedUser = localStorage.getItem("authUser");
+		const expiresAt = localStorage.getItem("authExpiresAt");
+
+		if (storedToken && storedUser && expiresAt) {
+			const now = new Date().getTime();
+			if (now > parseInt(expiresAt, 10)) {
+				signOut();
+			} else {
+				setToken(storedToken);
+				setUser(JSON.parse(storedUser));
+			}
+		}
+	}, [signOut]);
 
     const signIn = (userData: User, tokenData: string, expiresIn: number) => {
 		const expiresAt = new Date().getTime() + expiresIn * 1000;
