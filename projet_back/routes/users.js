@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, login, verifyToken, verifyTokenAdmin, updateUser, deleteUser } = require('../services/usersService');
+const { getUserByIdBd, userExists, createUser, getUsersByEmail, getAllUsers, login, verifyToken, verifyTokenAdmin, updateUser, deleteUser, decryptAES } = require('../services/usersService');
 const errorHandler = require("../utils/errorHandler");
 
 /**
@@ -39,6 +39,67 @@ router.get("/", verifyTokenAdmin, async (req, res) => {
 });
 
 // Route pour ajouter un utilisateur
+/**
+ * @swagger
+ * /users/register:
+ *   post:
+ *     summary: Créer un nouvel utilisateur
+ *     tags: [Utilisateurs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - firstname
+ *               - name
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "user@example.com"
+ *               firstname:
+ *                 type: string
+ *                 example: "John"
+ *               name:
+ *                 type: string
+ *                 example: "Doe"
+ *               password:
+ *                 type: string
+ *                 example: "password123"
+ *     responses:
+ *       201:
+ *         description: Utilisateur créé avec succès et connecté
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "b123e456-78cd-90ef-12gh-3456789ijkl"
+ *                     email:
+ *                       type: string
+ *                       example: "user@example.com"
+ *                     firstname:
+ *                       type: string
+ *                       example: "John"
+ *                     name:
+ *                       type: string
+ *                       example: "Doe"
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       400:
+ *         description: Requête invalide ou utilisateur déjà existant
+ *       500:
+ *         description: Erreur serveur
+ */
 router.post("/register", async (req, res) => {
     try {
         const { email, firstname, name, password } = req.body;
@@ -47,12 +108,8 @@ router.post("/register", async (req, res) => {
         if (!name) return res.status(400).json({ error: "name est requis" });
         if (!password) return res.status(400).json({ error: "password est requis" });
 
-        // check if user already exists
-        const exists = await userExists(email);
-        if (exists) return res.status(400).json({ error: "Cet utilisateur existe déjà" });
-
-        const newUser = await createUser(email, firstname, name, password);
-        res.status(201).json(newUser[0]);
+        const result = await createUser({ email, firstname, name, password });
+        res.status(201).json(result);
     } catch (error) {
         errorHandler(res, error);
     }
@@ -169,7 +226,7 @@ router.delete("/delete/:id", async (req, res) => {
 });
 
 // Route pour récupérer un utilisateur par ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", verifyToken, async (req, res) => {
     try {
         if (!req.params.id) return res.status(400).json({ error: "l'id est requis" });
         const user = await getUserByIdBd(req.params.id);
@@ -184,7 +241,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Route pour récupérer une liste d'utilisateurs par email
-router.get("/email/:email", async (req, res) => {
+router.get("/email/:email", verifyToken, async (req, res) => {
     try {
         const users = await getUsersByEmail(req.params.email);
         res.json(users);

@@ -142,3 +142,24 @@ ALTER TABLE IF EXISTS public.user_rfid
 
 
 GRANT ALL ON TABLE public.user_rfid TO postgres;
+
+
+CREATE TABLE IF NOT EXISTS public.module
+(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    hostname TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('IN', 'OUT')),
+    pair_id UUID NULL,
+    CONSTRAINT module_pair_id_fkey FOREIGN KEY (pair_id)
+        REFERENCES public.module (id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+);
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.module
+    OWNER to postgres;
+
+
+GRANT ALL ON TABLE public.module TO postgres;
