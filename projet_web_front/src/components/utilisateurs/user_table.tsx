@@ -8,7 +8,6 @@ import { DeleteUser } from "./delete_user";
 import { CreateUserModal } from "./create_user";
 import { Button } from "../ui/button";
 import { AddCard } from "../cards/add_card";
-import { UpdatePIN } from "./update_pin";
 import { useAuth } from "../../context/authContext";
 
 export function UserTable() {
@@ -20,9 +19,9 @@ export function UserTable() {
     const [isModalDeleteOpen, setIsModalDeleteOpen] = useState(false);
     const [isModalCreateOpen, setIsModalCreateOpen] = useState(false);
     const [isModalAssociateOpen, setIsModalAssociateOpen] = useState(false);
-    const [isModalUpdatePinOpen, setIsModalUpdatePinOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const { token } = useAuth();
+    console.log(token)
     // Fonction pour rafraîchir les données
     const refreshData = useCallback(async () => {
         try {
@@ -68,16 +67,6 @@ export function UserTable() {
         setIsModalAssociateOpen(true);
     };
 
-    const closeUpdatePinModal = () => {
-        setIsModalUpdatePinOpen(false);
-        setSelectedUserId(null);
-    };
-
-    const openUpdatePinModal = (userId: string) => {
-        setSelectedUserId(userId);
-        setIsModalUpdatePinOpen(true);
-    };
-
     const closeAssociateModal = () => {
         setIsModalAssociateOpen(false);
         setSelectedUserId(null);
@@ -100,7 +89,7 @@ export function UserTable() {
                 </div>
             <DataTable
                 data={data}
-                columns={UserColumns({ openUpdateModal, openDeleteModal, openAssociateModal, openUpdatePinModal })}
+                columns={UserColumns({ openUpdateModal, openDeleteModal, openAssociateModal })}
                 total={data.length}
                 defaultItemsPerPage={itemsPerPage}
                 setItemsPerPage={setItemsPerPage}
@@ -120,11 +109,7 @@ export function UserTable() {
             )}
 
             {isModalAssociateOpen && selectedUserId && (
-                <AddCard closeModal={closeAssociateModal} refreshData={refreshData} id={selectedUserId} />
-            )}
-
-            {isModalUpdatePinOpen && selectedUserId && (
-                <UpdatePIN closeModal={closeUpdatePinModal} refreshData={refreshData} id={selectedUserId} />
+                <AddCard closeModal={closeAssociateModal} refreshData={refreshData} />
             )}
         </div>
     );

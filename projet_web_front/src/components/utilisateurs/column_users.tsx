@@ -14,11 +14,10 @@ interface UserColumnsProps {
     openUpdateModal: (userId: string) => void;
     openDeleteModal: (userId: string) => void
     openAssociateModal: (userId: string) => void
-    openUpdatePinModal: (userId: string) => void
 }
 
 // Accept openModal as a prop
-export function UserColumns({ openUpdateModal, openDeleteModal, openAssociateModal, openUpdatePinModal }: UserColumnsProps): ColumnDef<UserDto>[] {
+export function UserColumns({ openUpdateModal, openDeleteModal, openAssociateModal }: UserColumnsProps): ColumnDef<UserDto>[] {
     return [
         {
             id: "firstname",
@@ -90,10 +89,6 @@ export function UserColumns({ openUpdateModal, openDeleteModal, openAssociateMod
                                 <DropdownMenuItem className="gap-2" onClick={() => openAssociateModal(row.original.id)} >
                                     <Link2 className="size-4" />
                                     Associer à une carte
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2" onClick={() => openUpdatePinModal(row.original.id)}>
-                                    <Pencil className="size-4" />
-                                    Modifier le PIN
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="gap-2 text-destructive" onClick={() => openDeleteModal(row.original.id)}>
                                     <Trash2 className="size-4" />
