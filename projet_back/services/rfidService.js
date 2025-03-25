@@ -188,7 +188,7 @@ const verifyAccess = async (cardId, pinCode) => {
 
     return {
         message:
-            accessCode.name + " " + accessCode.firstname
+            "Welcome, " + accessCode.firstname + " " + accessCode.name
     };
 };
 
