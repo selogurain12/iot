@@ -1,3 +1,4 @@
+const { get } = require("../routes/users");
 const client = require("./db");
 
 const getAllModules = async () => {
@@ -19,10 +20,27 @@ const getAllModules = async () => {
             };
         }
     }));
-    
+
     return formatModules;
 };
 
+const pairModules = async (moduleInId, moduleOutId) => {
+    const moduleIn = await getModuleById(moduleInId);
+    const moduleOut = await getModuleById(moduleOutId);
+    
+    if (moduleIn.type !== moduleOut.type) {
+        await client.query('UPDATE module set pair_id = $2 WHERE id = $1', [moduleInId, moduleOutId]);
+        await client.query('UPDATE module set pair_id = $1 WHERE id = $2', [moduleInId, moduleOutId]);
+    } else {
+        throw new Error('Les deux modules sélectionnés sont des modules de même type et donc ne peuvent pas être associés');
+    }
+};
+
+const getModuleById = async (id) => {
+    const module = await client.query('SELECT * FROM module WHERE id = $1', [id]);
+    return module.rows[0];
+};
+
 module.exports = {
-    getAllModules
+    getAllModules, pairModules
 };
