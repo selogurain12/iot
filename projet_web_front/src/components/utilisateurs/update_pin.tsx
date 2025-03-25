@@ -23,7 +23,7 @@ export function UpdatePIN({ id, closeModal, refreshData }: AddCardProps) {
         const fetchData = async () => {
             try {
                 const response = await axios.get(
-                    `http://localhost:3000/users/${id}`
+                    `http://10.33.76.16:3000/users/${id}`
                 );
                 setData(response.data);
             } catch (error) {
@@ -48,7 +48,7 @@ export function UpdatePIN({ id, closeModal, refreshData }: AddCardProps) {
         e.preventDefault();
         try {
             // Assurez-vous de soumettre l'ID de l'utilisateur sélectionné ici
-            await axios.post("http://localhost:3000/rfid");
+            await axios.post("http://10.33.76.16:3000/rfid");
             toast.success("Code PIN modifié avec succès");
             navigate("/userlist");
             refreshData();

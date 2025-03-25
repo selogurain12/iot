@@ -27,7 +27,7 @@ export function CreateUserModal({ closeModal, refreshData }: CreateUserModalProp
         });
         
         try {
-            await axios.post("http://localhost:3000/users/register", {
+            await axios.post("http://10.33.76.16:3000/users/register", {
                 firstname,
                 name,
                 email,

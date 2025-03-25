@@ -9,17 +9,16 @@ import { UserDto } from "../dtos/user.dto";
 import axios from "axios";
 
 export function Profil() {
-    const { user } = useAuth(); // Récupère l'utilisateur depuis le contexte
+    const { user } = useAuth();
     const [data, setData] = useState<UserDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Vérifier si user existe avant de tenter d'effectuer une requête
     useEffect(() => {
         if (user) {
             const fetchData = async () => {
                 try {
-                    const response = await axios.get<UserDto>(`http://localhost:3000/users/${user.id}`);
+                    const response = await axios.get<UserDto>(`http://10.33.76.16:3000/users/${user.id}`);
                     setData(response.data);
                 } catch (error) {
                     console.error("Erreur lors de la récupération des utilisateurs :", error);
@@ -30,31 +29,28 @@ export function Profil() {
 
             fetchData();
         }
-    }, [user]); // Si `user` change, on refait la requête
+    }, [user]);
 
-    // Fonction de rafraîchissement des données
     const refreshData = async () => {
         if (user) {
             try {
-                const response = await axios.get<UserDto>(`http://localhost:3000/users/${user.id}`);
-                setData(response.data); // Met à jour les données utilisateur après le refresh
+                const response = await axios.get<UserDto>(`http://10.33.76.16:3000/users/${user.id}`);
+                setData(response.data);
             } catch (error) {
                 console.error("Erreur lors du rafraîchissement des données utilisateur :", error);
             }
         }
     };
 
-    // Ouverture et fermeture du modal
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
-    // Lorsque le modal est fermé, on actualise les données
     const handleModalClose = () => {
         closeModal();
-        refreshData(); // Rafraîchit les données après fermeture du modal
+        refreshData();
     };
 
-    if (loading || !user) return <p>Chargement...</p>; // Si user est null ou en cours de chargement, afficher "Chargement..."
+    if (loading || !user) return <p>Chargement...</p>;
 
     return (
         <div className="h-screen relative flex overflow-hidden">
@@ -88,9 +84,9 @@ export function Profil() {
 
             {isModalOpen && user && (
                 <UpdateUserModal
-                    closeModal={handleModalClose} // Appel de `handleModalClose` pour fermer et actualiser
+                    closeModal={handleModalClose}
                     id={user.id}
-                    refreshData={refreshData} // Passer la fonction de rafraîchissement des données
+                    refreshData={refreshData}
                 />
             )}
         </div>

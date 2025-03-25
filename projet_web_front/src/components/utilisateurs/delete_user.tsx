@@ -24,7 +24,7 @@ export function DeleteUser({ closeModal, id, isModalDeleteOpen, refreshData }: D
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         try {
-            const response = await axios.delete(`http://localhost:3000/users/delete/${id}`);
+            const response = await axios.delete(`http://10.33.76.16:3000/users/delete/${id}`);
             console.log(response);
 
             if (response.status === 204) {

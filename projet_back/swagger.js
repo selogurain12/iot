@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000', // Remplace par l'URL de ton API
+        url: 'http://10.33.76.16:3000', // Remplace par l'URL de ton API
         description: 'Serveur local',
       },
     ],

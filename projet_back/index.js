@@ -28,6 +28,6 @@ app.get("/", (req, res) => {
 
 // Lancer le serveur
 app.listen(PORT, () => {
-  console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
-  console.log(`📚 Documentation Swagger : http://localhost:${PORT}/api-docs`);
+  console.log(`✅ Serveur démarré sur http://10.33.76.16:${PORT}`);
+  console.log(`📚 Documentation Swagger : http://10.33.76.16:${PORT}/api-docs`);
 });
