@@ -1,6 +1,6 @@
 import { AppSidebar } from "../sidebar/app-sidebar";
 import { SidebarProvider } from "../ui/sidebar";
-import { HistoriqueTable } from "./historique_table";
+import { AccessLogTable } from "./historique_table";
 
 export function ListHistorique() {
     return (
@@ -11,7 +11,7 @@ export function ListHistorique() {
             <main className="h-full w-full flex-auto overflow-auto antialiased">
                 <p className="text-5xl text-center">Historique</p>
                 <div className="p-5">
-                    <HistoriqueTable />
+                    <AccessLogTable />
                 </div>
             </main>
         </div>
