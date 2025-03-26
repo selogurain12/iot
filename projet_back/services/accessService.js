@@ -92,7 +92,49 @@ const logAccessAttempt = async (identifier, userId, success, message) => {
     await client.query(query, ['rfid', identifier, userId, success]);
 };
 
+const updateCodePinUser = async (userId, createCode) => {
+    try {
+        const existingCodeResult = await client.query(`SELECT id FROM access_codes WHERE user_id = $1`, [userId]);
+        if (existingCodeResult.rows.length === 0) {
+            throw new Error("The provided user does not have a PIN code");
+        } else {
+            await client.query( `UPDATE access_codes SET code = $2 WHERE user_id = $1`, [userId, createCode]);
+        }
+
+        return;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+const createUserPin = async (userId, createCode) => {
+    try {
+        const existingCodeResult = await client.query(`SELECT id FROM access_codes WHERE user_id = $1`, [userId]);
+
+        if (existingCodeResult.rows.length > 0) {
+            throw new Error("The provided PIN code already exists for this user.");
+        } else {
+            await client.query( `INSERT INTO access_codes (user_id, code, is_active) VALUES ($1, $2, true)`, [userId, createCode]);
+        }
+        return;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+const disabledUserPin = async (userId) => {
+    try {
+        await client.query( `UPDATE access_codes SET is_active = false WHERE user_id = $1`, [userId]);
+        return;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
 module.exports = {
     verifyAccess,
-    logAccessAttempt
+    logAccessAttempt,
+    updateCodePinUser,
+    createUserPin,
+    disabledUserPin
 };
