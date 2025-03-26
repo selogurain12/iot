@@ -9,8 +9,10 @@ import { UpdatePIN } from "./update_pin";
 import { Button } from "../ui/button";
 import { AddCard } from "./add_card";
 import { DissociateCard } from "./dissociate_user";
+import { useAuth } from "../../context/authContext";  // Importer le contexte d'authentification
 
 export function CardTable() {
+    const { user } = useAuth();  // Obtenir l'utilisateur connecté
     const [data, setData] = useState<CardDto[]>([]);
     const [itemsPerPage, setItemsPerPage] = useState(20);
     const [page, setPage] = useState(1);
@@ -29,14 +31,19 @@ export function CardTable() {
                 `http://localhost:3000/rfid?page=${page}&limit=${itemsPerPage}&search=${search}`
             );
             
-            const unassignedCards = response.data.filter(card => card.user_id !== null);
-            
-            setData(unassignedCards);
+            // Si l'utilisateur est un "user", filtrer les cartes pour n'afficher que celles assignées à l'utilisateur connecté
+            if (user?.role === "user") {
+                const userCards = response.data.filter(card => card.user_id === user.id);
+                setData(userCards);
+            } else {
+                // Si l'utilisateur est un admin, afficher toutes les cartes non assignées
+                const unassignedCards = response.data.filter(card => card.user_id !== null);
+                setData(unassignedCards);
+            }
         } catch (error) {
             console.error("Erreur lors de la récupération des cartes :", error);
         }
-    }, [page, itemsPerPage, search]);
-    
+    }, [page, itemsPerPage, search, user]);
 
     useEffect(() => {
         refreshData();
@@ -90,15 +97,23 @@ export function CardTable() {
         setIsModalCreateOpen(false);
     };
 
-
     return (
         <div>
-             <div className="w-full py-5 justify-items-end grid pr-3">
+            {/* Bouton visible uniquement pour les admins */}
+            {user?.role === "admin" && (
+                <div className="w-full py-5 justify-items-end grid pr-3">
                     <Button variant="outline" onClick={openCreateModal}>Créer une carte</Button>
                 </div>
+            )}
+
             <DataTable
                 data={data}
-                columns={CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinModal, openDissociateModal })}
+                columns={CardColumns({
+                    openUpdateModal,
+                    openDeleteModal,
+                    openUpdatePinModal,
+                    openDissociateModal,
+                })}
                 total={data.length}
                 defaultItemsPerPage={itemsPerPage}
                 setItemsPerPage={setItemsPerPage}
@@ -106,11 +121,12 @@ export function CardTable() {
                 setSearch={setSearch}
             />
 
-            {isModalUpdateOpen && selectedUserId && (
+            {/* Modaux conditionnels en fonction du rôle de l'utilisateur */}
+            {isModalUpdateOpen && selectedUserId && user?.role === "admin" && (
                 <UpdateCard id={selectedUserId} closeModal={closeUpdateModal} refreshData={refreshData} />
             )}
             
-            {isModalDeleteOpen && selectedUserId && (
+            {isModalDeleteOpen && selectedUserId && user?.role === "admin" && (
                 <DeleteCard isModalDeleteOpen id={selectedUserId} closeModal={closeDeleteModal} refreshData={refreshData} />
             )}
             
@@ -118,11 +134,12 @@ export function CardTable() {
                 <UpdatePIN closeModal={closeUpdatePinModal} refreshData={refreshData} id={selectedUserId} />
             )}
 
-            {isModalCreateOpen && (
+            {/* Le modal de création est limité aux admins */}
+            {isModalCreateOpen && user?.role === "admin" && (
                 <AddCard closeModal={closeCreateModal} refreshData={refreshData} />
             )}
 
-            {isModalDissociateOpen && selectedUserId && (
+            {isModalDissociateOpen && selectedUserId && user?.role === "admin" && (
                 <DissociateCard closeModal={closeDissociateModal} refreshData={refreshData} id={selectedUserId} isModalDeleteOpen />
             )}
         </div>

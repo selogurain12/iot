@@ -6,18 +6,21 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-  } from "../../components/ui/dropdown-menu";
+} from "../../components/ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { EllipsisVertical, Link2Off, Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "../../context/authContext";  // Importer le contexte d'authentification
 
 interface CardColumnsProps {
     openUpdateModal: (cardId: string) => void;
-    openDeleteModal: (cardId: string) => void
-    openUpdatePinModal: (cardId: string) => void
-    openDissociateModal: (cardId: string) => void
+    openDeleteModal: (cardId: string) => void;
+    openUpdatePinModal: (cardId: string) => void;
+    openDissociateModal: (cardId: string) => void;
 }
 
 export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinModal, openDissociateModal }: CardColumnsProps): ColumnDef<CardDto>[] {
+    const { user } = useAuth();  // Récupérer les informations sur l'utilisateur connecté
+
     return [
         {
             id: "card_id",
@@ -97,27 +100,33 @@ export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinMod
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem className="gap-2" onClick={() => openUpdateModal(row.original.card_id)}>
-                                    <Pencil className="size-4" />
-                                    Modifier
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2" onClick={() => openUpdatePinModal(row.original.id)}>
+                                {/* Conditionner l'affichage des actions selon le rôle */}
+                                {user?.role === "admin" && (
+                                    <>
+                                        <DropdownMenuItem className="gap-2" onClick={() => openUpdateModal(row.original.card_id)}>
+                                            <Pencil className="size-4" />
+                                            Modifier
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="gap-2" onClick={() => openDissociateModal(row.original.id)}>
+                                            <Link2Off className="size-4" />
+                                            Dissocier de l'utilisateur
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="gap-2 text-destructive" onClick={() => openDeleteModal(row.original.card_id)}>
+                                            <Trash2 className="size-4" />
+                                            Supprimer
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                                {/* Toujours afficher l'option de modification du PIN */}
+                                <DropdownMenuItem className="gap-2" onClick={() => openUpdatePinModal(row.original.card_id)}>
                                     <Pencil className="size-4" />
                                     Modifier le PIN
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2" onClick={() => openDissociateModal(row.original.id)}>
-                                    <Link2Off className="size-4" />
-                                    Dissocier de l'utilisateur
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-2 text-destructive" onClick={() => openDeleteModal(row.original.id)}>
-                                    <Trash2 className="size-4" />
-                                    Supprimer
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 );
             },
-        }
+        },
     ];
 }
