@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllRfids, createRfid, updateRfid, deleteRfid, getRfidByCardId, verifyAccess } = require('../services/rfidService');
+const { getAllRfids, createRfid, updateRfid, deleteRfid, getRfidByCardId, verifyAccess, allLogs } = require('../services/rfidService');
 const errorHandler = require("../utils/errorHandler");
 
 /**
@@ -387,4 +387,13 @@ router.post("/verify-access", async (req, res) => {
     }
 });
 
+router.get("/access_logs", async (req, res) => {
+    try {
+     const access = await allLogs();
+     console.log(access)
+      res.json(access);
+    } catch (error) {
+        errorHandler(res, error);
+    }
+  });
 module.exports = router;

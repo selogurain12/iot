@@ -8,15 +8,16 @@ import {
     DropdownMenuTrigger,
   } from "../../components/ui/dropdown-menu";
 import { Button } from "../ui/button";
-import { EllipsisVertical, Pencil, Trash2 } from "lucide-react";
+import { EllipsisVertical, Link2Off, Pencil, Trash2 } from "lucide-react";
 
 interface CardColumnsProps {
-    openUpdateModal: (userId: string) => void;
-    openDeleteModal: (userId: string) => void
-    openUpdatePinModal: (userId: string) => void
+    openUpdateModal: (cardId: string) => void;
+    openDeleteModal: (cardId: string) => void
+    openUpdatePinModal: (cardId: string) => void
+    openDissociateModal: (cardId: string) => void
 }
 
-export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinModal }: CardColumnsProps): ColumnDef<CardDto>[] {
+export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinModal, openDissociateModal }: CardColumnsProps): ColumnDef<CardDto>[] {
     return [
         {
             id: "card_id",
@@ -103,6 +104,10 @@ export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinMod
                                 <DropdownMenuItem className="gap-2" onClick={() => openUpdatePinModal(row.original.id)}>
                                     <Pencil className="size-4" />
                                     Modifier le PIN
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="gap-2" onClick={() => openDissociateModal(row.original.id)}>
+                                    <Link2Off className="size-4" />
+                                    Dissocier de l'utilisateur
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="gap-2 text-destructive" onClick={() => openDeleteModal(row.original.id)}>
                                     <Trash2 className="size-4" />

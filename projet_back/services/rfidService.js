@@ -203,11 +203,17 @@ const logAccessAttempt = async (identifier, userId, success, message) => {
     await client.query(query, ['rfid', identifier, userId, success]);
 };
 
+const allLogs = async() => {
+    const query = await client.query('SELECT * FROM access_logs ORDER BY created_at DESC')
+    return query.rows;
+}
+
 module.exports = {
     getAllRfids,
     createRfid,
     updateRfid,
     deleteRfid,
     getRfidByCardId,
-    verifyAccess
+    verifyAccess,
+    allLogs
 };

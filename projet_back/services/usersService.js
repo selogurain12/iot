@@ -117,7 +117,14 @@ function verifyToken(req, res, next) {
         return res.status(403).json({ error: 'No token provided' });
     }
 
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (!token.startsWith('Bearer ')) {
+        return res.status(403).json({ error: 'Invalid token format' });
+    }
+
+    const bearerToken = token.split(' ')[1];
+
+    jwt.verify(bearerToken, SECRET_KEY, (err, decoded) => {
+        console.log(token)
         if (err) {
             return res.status(401).json({ error: 'Unauthorized' });
         }

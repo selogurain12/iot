@@ -16,71 +16,66 @@ interface UpdateCardProps {
 
 export function UpdateCard({ closeModal, id, refreshData }: UpdateCardProps) {
     const [data, setData] = useState<UserDto[]>([]);
-    const [card, setCard] = useState<CardDto>();
-    const [allCard, setAllCard] = useState<CardDto[]>([]);
+    const [card, setCard] = useState<CardDto | undefined>(undefined); // Initialiser à undefined
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>("");
-    const [selectedCard, setSelectedCard] = useState<string>("");
     const { token } = useAuth();
-     useEffect(() => {
-            const fetchData = async () => {
-                try {
-                    const response = await axios.get<CardDto>(
-                        `http://10.33.76.16:3000/rfid/card/${id}`
-                    );
-                    setCard(response.data);
-                } catch (error) {
-                    console.error("Erreur lors de la récupération des utilisateurs :", error);
-                } finally {
-                    setLoading(false);
-                }
-            };
-        
-            fetchData();
-        }, [id]);
-         useEffect(() => {
-                if (card) {
-                    setSelectedCard(card.card_id);
-                    setSelectedUser(card.user_id);
-                }
-            }, [card]);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get<UserDto[]>(
-                    `http://10.33.76.16:3000/users`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    }
+                const response = await axios.get<CardDto>(
+                    `http://localhost:3000/rfid/card/${id}`
                 );
-                const cardData = await axios.get<CardDto[]>(
-                    `http://10.33.76.16:3000/rfid`
-                );
-                setData(response.data);
-                setAllCard(cardData.data)
+                setCard(response.data);
             } catch (error) {
-                console.error("Erreur lors de la récupération des utilisateurs :", error);
+                console.error("Erreur lors de la récupération des informations de la carte :", error);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
+    }, [id]);
+
+    useEffect(() => {
+        if (card) {
+            setSelectedUser(card.user_id);
+        }
+    }, [card]);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const response = await axios.get<UserDto[]>(
+                    `http://localhost:3000/users`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+                setData(response.data);
+            } catch (error) {
+                console.error("Erreur lors de la récupération des utilisateurs :", error);
+            }
+        };
+
+        fetchUsers();
     }, [token]);
+
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         try {
             // Assurez-vous de soumettre l'ID de l'utilisateur sélectionné ici
-            await axios.put(`http://10.33.76.16:3000/rfid/${card?.id}`, {
-                        card_id: selectedCard,
-                        user_id: selectedUser
-                    });
-            toast.success("Carte RFID ajoutée avec succès");
+            await axios.put(`http://localhost:3000/rfid/${card?.id}`, {
+                card_id: card?.card_id, // Utiliser card_id directement
+                user_id: selectedUser
+            });
+            toast.success("Carte RFID mise à jour avec succès");
             refreshData();
             closeModal();
         } catch (error) {
-            console.error("Erreur lors de l'envoi des données:", error);
+            console.error("Erreur lors de la mise à jour de la carte:", error);
         }
     };
 
@@ -92,46 +87,34 @@ export function UpdateCard({ closeModal, id, refreshData }: UpdateCardProps) {
                         <CardTitle>Modifier une carte RFID</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                    {loading ? (
-                            <p>Chargement des cartes...</p>
+                        {loading ? (
+                            <p>Chargement des informations...</p>
                         ) : (
-                        <div className="space-y-1">
-                            <Select value={selectedCard} onValueChange={setSelectedCard}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Sélectionner une carte" /> {/* Affiche la valeur sélectionnée ici */}
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectLabel>Choisir une carte</SelectLabel>
-                                        {allCard.map((card) => (
-                                            <SelectItem key={card.card_id} value={card.card_id}>
-                                                {card.card_id}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                            <div>
+                                {/* Affichage de card_id */}
+                                <p><strong>Card ID:</strong> {card?.card_id}</p>
                             </div>
                         )}
+
                         {loading ? (
                             <p>Chargement des utilisateurs...</p>
                         ) : (
-                        <div className="space-y-1">
-                            <Select value={selectedUser} onValueChange={setSelectedUser}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Sélectionner un utilisateur" /> {/* Affiche la valeur sélectionnée ici */}
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectLabel>Choisir un utilisateur</SelectLabel>
-                                        {data.map((user) => (
-                                            <SelectItem key={user.id} value={user.id}>
-                                                {user.firstname} {user.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                            <div className="space-y-1">
+                                <Select value={selectedUser} onValueChange={setSelectedUser}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Sélectionner un utilisateur" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Choisir un utilisateur</SelectLabel>
+                                            {data.map((user) => (
+                                                <SelectItem key={user.id} value={user.id}>
+                                                    {user.firstname} {user.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         )}
                     </CardContent>

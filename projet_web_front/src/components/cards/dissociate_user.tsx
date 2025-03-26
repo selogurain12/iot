@@ -9,7 +9,7 @@ import { MotionAlertDialogActionWrapper } from "../ui/alert-dialog/motion/action
 import { MotionAlertDialogCancelWrapper } from "../ui/alert-dialog/motion/cancel-wrapper.motion";
 import { toast } from "sonner";
 
-interface DeleteCardModalProps {
+interface DissociateCardModalProps {
     closeModal: () => void;
     isModalDeleteOpen: boolean;
     id: string;
@@ -17,14 +17,16 @@ interface DeleteCardModalProps {
 }
 
 
-export function DeleteCard({closeModal, id, isModalDeleteOpen, refreshData}: DeleteCardModalProps) {
+export function DissociateCard({closeModal, id, isModalDeleteOpen, refreshData}: DissociateCardModalProps) {
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         try {
-            const response = await axios.delete(`http://localhost:3000/rfid/${id}`);
+            const response = await axios.put(`http://localhost:3000/rfid/${id}`, {
+                user_id: null
+            });
             console.log(response)
             if (response.status === 200) {
-                toast.success("La carte a bien été supprimée");
+                toast.success("La carte a bien été dissociée");
                 await refreshData();
                 setTimeout(() => {
                     closeModal();
@@ -39,9 +41,9 @@ export function DeleteCard({closeModal, id, isModalDeleteOpen, refreshData}: Del
         <AlertDialog open={isModalDeleteOpen} onOpenChange={closeModal}>
 			<AlertDialogContent className="sm:max-w-[800px] sm:max-h-[80%] overflow-y-scroll bg-white rounded-lg p-8">
 				<AlertDialogHeader>
-					<AlertDialogTitle>Supprimer une carte</AlertDialogTitle>
+					<AlertDialogTitle>Dissocier la carte de l'utilisateur</AlertDialogTitle>
 					<AlertDialogDescription>
-						Êtes-vous sûr de vouloir supprimer cette carte ?
+						Êtes-vous sûr de vouloir dissocier cette carte de son utilisateur ?
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 

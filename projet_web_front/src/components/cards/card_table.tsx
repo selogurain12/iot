@@ -8,6 +8,7 @@ import { DeleteCard } from "./delete_card";
 import { UpdatePIN } from "./update_pin";
 import { Button } from "../ui/button";
 import { AddCard } from "./add_card";
+import { DissociateCard } from "./dissociate_user";
 
 export function CardTable() {
     const [data, setData] = useState<CardDto[]>([]);
@@ -18,19 +19,24 @@ export function CardTable() {
     const [isModalDeleteOpen, setIsModalDeleteOpen] = useState(false);
     const [isModalCreateOpen, setIsModalCreateOpen] = useState(false);
     const [isModalUpdatePinOpen, setIsModalUpdatePinOpen] = useState(false);
+    const [isModalDissociateOpen, setIsModalDissociateOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
     // Fonction pour rafraîchir les données
     const refreshData = useCallback(async () => {
         try {
             const response = await axios.get<CardDto[]>(
-                `http://10.33.76.16:3000/rfid?page=${page}&limit=${itemsPerPage}&search=${search}`
+                `http://localhost:3000/rfid?page=${page}&limit=${itemsPerPage}&search=${search}`
             );
-            setData(response.data);
+            
+            const unassignedCards = response.data.filter(card => card.user_id !== null);
+            
+            setData(unassignedCards);
         } catch (error) {
-            console.error("Erreur lors de la récupération des utilisateurs :", error);
+            console.error("Erreur lors de la récupération des cartes :", error);
         }
     }, [page, itemsPerPage, search]);
+    
 
     useEffect(() => {
         refreshData();
@@ -43,6 +49,16 @@ export function CardTable() {
 
     const closeUpdateModal = () => {
         setIsModalUpdateOpen(false);
+        setSelectedUserId(null);
+    };
+
+    const openDissociateModal = (userId: string) => {
+        setSelectedUserId(userId);
+        setIsModalDissociateOpen(true);
+    };
+
+    const closeDissociateModal = () => {
+        setIsModalDissociateOpen(false);
         setSelectedUserId(null);
     };
 
@@ -82,7 +98,7 @@ export function CardTable() {
                 </div>
             <DataTable
                 data={data}
-                columns={CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinModal })}
+                columns={CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinModal, openDissociateModal })}
                 total={data.length}
                 defaultItemsPerPage={itemsPerPage}
                 setItemsPerPage={setItemsPerPage}
@@ -104,6 +120,10 @@ export function CardTable() {
 
             {isModalCreateOpen && (
                 <AddCard closeModal={closeCreateModal} refreshData={refreshData} />
+            )}
+
+            {isModalDissociateOpen && selectedUserId && (
+                <DissociateCard closeModal={closeDissociateModal} refreshData={refreshData} id={selectedUserId} isModalDeleteOpen />
             )}
         </div>
     );

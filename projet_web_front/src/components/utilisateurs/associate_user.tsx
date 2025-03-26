@@ -4,63 +4,52 @@ import { Select, SelectItem, SelectTrigger, SelectContent, SelectLabel, SelectGr
 import axios from "axios";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { UserDto } from "../dtos/user.dto";
-import { useAuth } from "../../context/authContext";
 import { CardDto } from "../dtos/card.dto";
 
-interface AddCardProps {
+interface AssociateCardProps {
     closeModal: () => void;
     refreshData: () => Promise<void>;
+    id: string; // ID de l'utilisateur déjà connu
 }
 
-export function AddCard({ closeModal, refreshData }: AddCardProps) {
-    const [data, setData] = useState<UserDto[]>([]);
-    const [card, setCard] = useState<CardDto[]>([]);
+export function AssociateCard({ closeModal, id, refreshData }: AssociateCardProps) {
+    const [cards, setCards] = useState<CardDto[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedUser, setSelectedUser] = useState<string>("");
-    const [selectedCard, setSelectedCard] = useState<CardDto | undefined>(undefined); // Type modifié ici
-    const { token } = useAuth();
+    const [selectedCard, setSelectedCard] = useState<CardDto | undefined>(undefined);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get<UserDto[]>(
-                    `http://localhost:3000/users`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    }
-                );
-                const cardData = await axios.get<CardDto[]>(
-                    `http://localhost:3000/rfid`
-                );
+                const cardData = await axios.get<CardDto[]>(`http://localhost:3000/rfid`);
                 const unassignedCards = cardData.data.filter(card => card.user_id === null);
-                setData(response.data);
-                setCard(unassignedCards);
+                setCards(unassignedCards);
             } catch (error) {
-                console.error("Erreur lors de la récupération des utilisateurs :", error);
+                console.error("Erreur lors de la récupération des cartes :", error);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [token]);
+    }, []);
 
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         try {
-            if (selectedCard) { // Vérification si selectedCard n'est pas undefined
+            if (selectedCard) {
                 await axios.put(`http://localhost:3000/rfid/${selectedCard.id}`, {
                     card_id: selectedCard.card_id,
-                    user_id: selectedUser
+                    user_id: id // Utilisation de l'ID de l'utilisateur déjà connu
                 });
-                toast.success("Carte RFID ajoutée avec succès");
+                toast.success("Carte RFID associée avec succès !");
                 refreshData();
                 closeModal();
+            } else {
+                toast.error("Veuillez sélectionner une carte.");
             }
         } catch (error) {
-            console.error("Erreur lors de l'envoi des données:", error);
+            console.error("Erreur lors de l'association de la carte :", error);
+            toast.error("Échec de l'association de la carte.");
         }
     };
 
@@ -69,7 +58,7 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
             <div className="bg-white rounded-lg shadow-lg w-[400px]">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Ajouter une carte RFID</CardTitle>
+                        <CardTitle>Associer une carte RFID</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                         {loading ? (
@@ -77,9 +66,8 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
                         ) : (
                             <div className="space-y-1">
                                 <Select value={selectedCard?.card_id} onValueChange={(value) => {
-                                    // Trouver la carte correspondant à l'ID sélectionné
-                                    const cardSelected = card.find(c => c.card_id === value);
-                                    setSelectedCard(cardSelected); // Mettre à jour l'état avec l'objet carte
+                                    const cardSelected = cards.find(c => c.card_id === value);
+                                    setSelectedCard(cardSelected);
                                 }}>
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Sélectionner une carte" />
@@ -87,30 +75,9 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
                                     <SelectContent>
                                         <SelectGroup>
                                             <SelectLabel>Choisir une carte</SelectLabel>
-                                            {card.map((card) => (
+                                            {cards.map((card) => (
                                                 <SelectItem key={card.card_id} value={card.card_id}>
                                                     {card.card_id}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-                        {loading ? (
-                            <p>Chargement des utilisateurs...</p>
-                        ) : (
-                            <div className="space-y-1">
-                                <Select value={selectedUser} onValueChange={setSelectedUser}>
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Sélectionner un utilisateur" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectLabel>Choisir un utilisateur</SelectLabel>
-                                            {data.map((user) => (
-                                                <SelectItem key={user.id} value={user.id}>
-                                                    {user.firstname} {user.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectGroup>

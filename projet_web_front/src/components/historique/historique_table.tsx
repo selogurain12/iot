@@ -16,7 +16,7 @@ export function AccessLogTable() {
     const refreshData = useCallback(async () => {
         try {
             const response = await axios.get<AccessLog[]>(
-                `http://10.33.76.16:3000/rfid/access_logs?page=${page}&limit=${itemsPerPage}&search=${search}`, {
+                `http://localhost:3000/rfid/access_logs?page=${page}&limit=${itemsPerPage}&search=${search}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

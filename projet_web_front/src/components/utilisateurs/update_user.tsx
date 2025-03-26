@@ -28,7 +28,7 @@ export function UpdateUserModal({ closeModal, id, refreshData }: UpdateUserModal
         const fetchData = async () => {
             try {
                 const response = await axios.get<UserDto>(
-                    `http://10.33.76.16:3000/users/${id}`, {
+                    `http://localhost:3000/users/${id}`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
@@ -59,7 +59,7 @@ export function UpdateUserModal({ closeModal, id, refreshData }: UpdateUserModal
         e.preventDefault();
         
         try {
-            await axios.put(`http://10.33.76.16:3000/users/update/${id}`, {
+            await axios.put(`http://localhost:3000/users/update/${id}`, {
                 firstname,
                 name,
                 email,

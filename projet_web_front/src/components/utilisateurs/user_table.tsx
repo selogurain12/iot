@@ -7,8 +7,8 @@ import { UpdateUserModal } from "./update_user";
 import { DeleteUser } from "./delete_user";
 import { CreateUserModal } from "./create_user";
 import { Button } from "../ui/button";
-import { AddCard } from "../cards/add_card";
 import { useAuth } from "../../context/authContext";
+import { AssociateCard } from "./associate_user";
 
 export function UserTable() {
     const [data, setData] = useState<UserDto[]>([]);
@@ -26,7 +26,7 @@ export function UserTable() {
     const refreshData = useCallback(async () => {
         try {
             const response = await axios.get<UserDto[]>(
-                `http://10.33.76.16:3000/users?page=${page}&limit=${itemsPerPage}&search=${search}`, {
+                `http://localhost:3000/users?page=${page}&limit=${itemsPerPage}&search=${search}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -71,6 +71,7 @@ export function UserTable() {
         setIsModalAssociateOpen(false);
         setSelectedUserId(null);
     };
+    
 
     const openCreateModal = () => {
         setIsModalCreateOpen(true);
@@ -109,7 +110,7 @@ export function UserTable() {
             )}
 
             {isModalAssociateOpen && selectedUserId && (
-                <AddCard closeModal={closeAssociateModal} refreshData={refreshData} />
+                <AssociateCard closeModal={closeAssociateModal} refreshData={refreshData} id={selectedUserId} />
             )}
         </div>
     );

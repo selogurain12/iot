@@ -18,7 +18,7 @@ export function Profil() {
         if (user) {
             const fetchData = async () => {
                 try {
-                    const response = await axios.get<UserDto>(`http://10.33.76.16:3000/users/${user.id}`, {
+                    const response = await axios.get<UserDto>(`http://localhost:3000/users/${user.id}`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
@@ -38,7 +38,7 @@ export function Profil() {
     const refreshData = async () => {
         if (user) {
             try {
-                const response = await axios.get<UserDto>(`http://10.33.76.16:3000/users/${user.id}`);
+                const response = await axios.get<UserDto>(`http://localhost:3000/users/${user.id}`);
                 setData(response.data);
             } catch (error) {
                 console.error("Erreur lors du rafraîchissement des données utilisateur :", error);
