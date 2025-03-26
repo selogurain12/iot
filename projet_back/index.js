@@ -20,11 +20,13 @@ const usersRoutes = require("./routes/users");
 const rfidRoutes = require("./routes/rfid");
 const mqttRoutes = require("./routes/mqtt");
 const moduleRoutes = require("./routes/module");
+const accessRoutes = require("./routes/access");
 
 app.use("/users", usersRoutes);
 app.use("/rfid", rfidRoutes);
 app.use("/mqtt", mqttRoutes);
 app.use("/module", moduleRoutes);
+app.use("/access", accessRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World !");
