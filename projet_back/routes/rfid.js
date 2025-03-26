@@ -7,18 +7,18 @@ const errorHandler = require("../utils/errorHandler");
  * @swagger
  * tags:
  *   name: RFID
- *   description: Gestion des badges RFID
+ *   description: RFID badge management
  */
 
 /**
  * @swagger
  * /rfid:
  *   get:
- *     summary: Récupérer toutes les cartes RFID
+ *     summary: Get all RFID cards
  *     tags: [RFID]
  *     responses:
  *       200:
- *         description: Liste des cartes RFID
+ *         description: List of RFID cards
  *         content:
  *           application/json:
  *             schema:
@@ -29,32 +29,32 @@ const errorHandler = require("../utils/errorHandler");
  *                   id:
  *                     type: string
  *                     format: uuid
- *                     description: Identifiant unique de la carte RFID
+ *                     description: Unique identifier of the RFID card
  *                   card_id:
  *                     type: string
- *                     description: Code unique de la carte RFID
+ *                     description: Unique code of the RFID card
  *                   user_id:
  *                     type: string
  *                     format: uuid
- *                     description: ID de l'utilisateur associé à la carte
+ *                     description: ID of the user associated with the card
  *                   is_active:
  *                     type: boolean
- *                     description: Indique si la carte est active
+ *                     description: Indicates if the card is active
  *                   created_at:
  *                     type: string
  *                     format: date-time
- *                     description: Date de création de la carte
+ *                     description: Date when the card was created
  *                   name:
  *                     type: string
- *                     description: Nom de l'utilisateur associé
+ *                     description: Name of the associated user
  *                   firstname:
  *                     type: string
- *                     description: Prénom de l'utilisateur associé
+ *                     description: First name of the associated user
  *                   email:
  *                     type: string
- *                     description: Email de l'utilisateur associé
+ *                     description: Email of the associated user
  *       500:
- *         description: Erreur serveur
+ *         description: Server error
  */
 router.get("/", async (req, res) => {
     try {
@@ -69,7 +69,7 @@ router.get("/", async (req, res) => {
  * @swagger
  * /rfid/card/{cardId}:
  *   get:
- *     summary: Récupérer une carte RFID par son code
+ *     summary: Get an RFID card by its code
  *     tags: [RFID]
  *     parameters:
  *       - in: path
@@ -77,10 +77,10 @@ router.get("/", async (req, res) => {
  *         schema:
  *           type: string
  *         required: true
- *         description: Code de la carte RFID
+ *         description: RFID card code
  *     responses:
  *       200:
- *         description: Carte RFID trouvée
+ *         description: RFID card found
  *         content:
  *           application/json:
  *             schema:
@@ -89,40 +89,40 @@ router.get("/", async (req, res) => {
  *                 id:
  *                   type: string
  *                   format: uuid
- *                   description: Identifiant unique de la carte RFID
+ *                   description: Unique identifier of the RFID card
  *                 card_id:
  *                   type: string
- *                   description: Code unique de la carte RFID
+ *                   description: Unique code of the RFID card
  *                 user_id:
  *                   type: string
  *                   format: uuid
- *                   description: ID de l'utilisateur associé à la carte
+ *                   description: ID of the user associated with the card
  *                 is_active:
  *                   type: boolean
- *                   description: Indique si la carte est active
+ *                   description: Indicates if the card is active
  *                 created_at:
  *                   type: string
  *                   format: date-time
- *                   description: Date de création de la carte
+ *                   description: Date when the card was created
  *                 name:
  *                   type: string
- *                   description: Nom de l'utilisateur associé
+ *                   description: Name of the associated user
  *                 firstname:
  *                   type: string
- *                   description: Prénom de l'utilisateur associé
+ *                   description: First name of the associated user
  *                 email:
  *                   type: string
- *                   description: Email de l'utilisateur associé
+ *                   description: Email of the associated user
  *       404:
- *         description: Carte RFID non trouvée
+ *         description: RFID card not found
  *       500:
- *         description: Erreur serveur
+ *         description: Server error
  */
 router.get("/card/:cardId", async (req, res) => {
     try {
         const rfid = await getRfidByCardId(req.params.cardId);
         if (!rfid) {
-            return res.status(404).json({ error: "Carte RFID non trouvée" });
+            return res.status(404).json({ error: "RFID card not found" });
         }
         res.json(rfid);
     } catch (error) {
@@ -134,7 +134,7 @@ router.get("/card/:cardId", async (req, res) => {
  * @swagger
  * /rfid:
  *   post:
- *     summary: Créer une nouvelle carte RFID
+ *     summary: Create a new RFID card
  *     tags: [RFID]
  *     requestBody:
  *       required: true
@@ -147,17 +147,17 @@ router.get("/card/:cardId", async (req, res) => {
  *             properties:
  *               card_id:
  *                 type: string
- *                 description: Code unique de la carte RFID
+ *                 description: Unique code of the RFID card
  *               user_id:
  *                 type: string
  *                 format: uuid
- *                 description: ID de l'utilisateur à associer à la carte
+ *                 description: ID of the user to associate with the card
  *               is_active:
  *                 type: boolean
- *                 description: Statut d'activation de la carte
+ *                 description: Card activation status
  *     responses:
  *       201:
- *         description: Carte RFID créée avec succès
+ *         description: RFID card created successfully
  *         content:
  *           application/json:
  *             schema:
@@ -166,30 +166,30 @@ router.get("/card/:cardId", async (req, res) => {
  *                 id:
  *                   type: string
  *                   format: uuid
- *                   description: Identifiant unique de la carte RFID
+ *                   description: Unique identifier of the RFID card
  *                 card_id:
  *                   type: string
- *                   description: Code unique de la carte RFID
+ *                   description: Unique code of the RFID card
  *                 user_id:
  *                   type: string
  *                   format: uuid
- *                   description: ID de l'utilisateur associé à la carte
+ *                   description: ID of the user associated with the card
  *                 is_active:
  *                   type: boolean
- *                   description: Indique si la carte est active
+ *                   description: Indicates if the card is active
  *                 created_at:
  *                   type: string
  *                   format: date-time
- *                   description: Date de création de la carte
+ *                   description: Date when the card was created
  *       400:
- *         description: Données invalides
+ *         description: Invalid data
  *       500:
- *         description: Erreur serveur
+ *         description: Server error
  */
 router.post("/", async (req, res) => {
     try {
         if (!req.body.card_id) {
-            return res.status(400).json({ error: "Le code de la carte est requis" });
+            return res.status(400).json({ error: "Card code is required" });
         }
         const rfid = await createRfid(req.body);
         res.status(201).json(rfid);
@@ -202,7 +202,7 @@ router.post("/", async (req, res) => {
  * @swagger
  * /rfid/{id}:
  *   put:
- *     summary: Mettre à jour une carte RFID
+ *     summary: Update an RFID card
  *     tags: [RFID]
  *     parameters:
  *       - in: path
@@ -211,7 +211,7 @@ router.post("/", async (req, res) => {
  *           type: string
  *           format: uuid
  *         required: true
- *         description: Identifiant unique de la carte RFID
+ *         description: Unique identifier of the RFID card
  *     requestBody:
  *       required: true
  *       content:
@@ -221,17 +221,17 @@ router.post("/", async (req, res) => {
  *             properties:
  *               card_id:
  *                 type: string
- *                 description: Nouveau code de la carte RFID
+ *                 description: New RFID card code
  *               user_id:
  *                 type: string
  *                 format: uuid
- *                 description: ID du nouvel utilisateur à associer
+ *                 description: ID of the new user to associate
  *               is_active:
  *                 type: boolean
- *                 description: Nouveau statut d'activation
+ *                 description: New activation status
  *     responses:
  *       200:
- *         description: Carte RFID mise à jour avec succès
+ *         description: RFID card updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -240,34 +240,34 @@ router.post("/", async (req, res) => {
  *                 id:
  *                   type: string
  *                   format: uuid
- *                   description: Identifiant unique de la carte RFID
+ *                   description: Unique identifier of the RFID card
  *                 card_id:
  *                   type: string
- *                   description: Code unique de la carte RFID
+ *                   description: Unique code of the RFID card
  *                 user_id:
  *                   type: string
  *                   format: uuid
- *                   description: ID de l'utilisateur associé à la carte
+ *                   description: ID of the user associated with the card
  *                 is_active:
  *                   type: boolean
- *                   description: Indique si la carte est active
+ *                   description: Indicates if the card is active
  *                 created_at:
  *                   type: string
  *                   format: date-time
- *                   description: Date de création de la carte
+ *                   description: Date when the card was created
  *       400:
- *         description: Données invalides
+ *         description: Invalid data
  *       404:
- *         description: Carte RFID non trouvée
+ *         description: RFID card not found
  *       500:
- *         description: Erreur serveur
+ *         description: Server error
  */
 router.put("/:id", async (req, res) => {
     try {
         const rfid = await updateRfid(req.params.id, req.body);
         res.json(rfid);
     } catch (error) {
-        if (error.message === "Carte RFID non trouvée") {
+        if (error.message === "RFID card not found") {
             res.status(404).json({ error: error.message });
         } else {
             errorHandler(res, error);
@@ -279,7 +279,7 @@ router.put("/:id", async (req, res) => {
  * @swagger
  * /rfid/{id}:
  *   delete:
- *     summary: Supprimer une carte RFID
+ *     summary: Delete an RFID card
  *     tags: [RFID]
  *     parameters:
  *       - in: path
@@ -288,10 +288,10 @@ router.put("/:id", async (req, res) => {
  *           type: string
  *           format: uuid
  *         required: true
- *         description: Identifiant unique de la carte RFID
+ *         description: Unique identifier of the RFID card
  *     responses:
  *       200:
- *         description: Carte RFID supprimée avec succès
+ *         description: RFID card deleted successfully
  *         content:
  *           application/json:
  *             schema:
@@ -300,32 +300,32 @@ router.put("/:id", async (req, res) => {
  *                 id:
  *                   type: string
  *                   format: uuid
- *                   description: Identifiant unique de la carte RFID
+ *                   description: Unique identifier of the RFID card
  *                 card_id:
  *                   type: string
- *                   description: Code unique de la carte RFID
+ *                   description: Unique code of the RFID card
  *                 user_id:
  *                   type: string
  *                   format: uuid
- *                   description: ID de l'utilisateur associé à la carte
+ *                   description: ID of the user associated with the card
  *                 is_active:
  *                   type: boolean
- *                   description: Indique si la carte est active
+ *                   description: Indicates if the card is active
  *                 created_at:
  *                   type: string
  *                   format: date-time
- *                   description: Date de création de la carte
+ *                   description: Date when the card was created
  *       404:
- *         description: Carte RFID non trouvée
+ *         description: RFID card not found
  *       500:
- *         description: Erreur serveur
+ *         description: Server error
  */
 router.delete("/:id", async (req, res) => {
     try {
         const rfid = await deleteRfid(req.params.id);
         res.json(rfid);
     } catch (error) {
-        if (error.message === "Carte RFID non trouvée") {
+        if (error.message === "RFID card not found") {
             res.status(404).json({ error: error.message });
         } else {
             errorHandler(res, error);
@@ -338,7 +338,7 @@ router.delete("/:id", async (req, res) => {
  * @swagger
  * /rfid/verify-access:
  *   post:
- *     summary: Vérifier l'accès d'une carte RFID avec un code PIN
+ *     summary: Verify access of an RFID card with a PIN code
  *     tags: [RFID]
  *     requestBody:
  *       required: true
@@ -352,13 +352,13 @@ router.delete("/:id", async (req, res) => {
  *             properties:
  *               cardId:
  *                 type: string
- *                 description: Code unique de la carte RFID
+ *                 description: Unique code of the RFID card
  *               pinCode:
  *                 type: string
- *                 description: Code PIN associé à l'utilisateur
+ *                 description: PIN code associated with the user
  *     responses:
  *       200:
- *         description: Résultat de la vérification d'accès
+ *         description: Access verification result
  *         content:
  *           application/json:
  *             schema:
@@ -366,16 +366,16 @@ router.delete("/:id", async (req, res) => {
  *               properties:
  *                 access:
  *                   type: boolean
- *                   description: Indique si l'accès est autorisé
+ *                   description: Indicates if access is authorized
  *                 message:
  *                   type: string
- *                   description: Message explicatif du résultat
+ *                   description: Explanatory message for the result
  *       400:
- *         description: Données manquantes
+ *         description: Missing data
  *       404:
- *         description: Carte RFID non trouvée
+ *         description: RFID card not found
  *       500:
- *         description: Erreur serveur
+ *         description: Server error
  */
 router.post("/verify-access", async (req, res) => {
     try {
