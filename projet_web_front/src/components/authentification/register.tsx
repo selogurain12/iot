@@ -10,6 +10,7 @@ import { CardFooter } from "../ui/cards/card-footer";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/authContext";
 
 export function Register() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export function Register() {
   const [name, setname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: { preventDefault: () => void; }) => {
       e.preventDefault();
@@ -26,14 +28,15 @@ export function Register() {
     });
 
       try {
-          await axios.post("http://localhost:3000/users/register", {
+          const response = await axios.post("http://localhost:3000/users/register", {
               firstname,
               name,
               email,
               password,
               created_at,
           });
-
+          const { user, token } = response.data;
+          signIn(user, token, 3600);
           toast.success("Vous êtes bien inscrit");
           navigate("/");  // Redirection après inscription (peut être personnalisée)
       } catch (error) {
