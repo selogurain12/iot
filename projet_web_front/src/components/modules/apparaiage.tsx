@@ -4,7 +4,12 @@ import { Button } from "../ui/button"; // Assurez-vous d'avoir un composant Butt
 import { ModuleDto } from "../dtos/module.dto";
 import { toast } from "sonner";
 
-export function PairingPage() {
+interface PairingPageProps {
+  closeModal: () => void;
+  refreshData: () => void;
+}
+
+export function PairingPage({ closeModal, refreshData }: PairingPageProps) {
   const [inModules, setInModules] = useState<ModuleDto[]>([]);
   const [outModules, setOutModules] = useState<ModuleDto[]>([]);
   const [selectedIn, setSelectedIn] = useState<ModuleDto | null>(null);
@@ -16,8 +21,12 @@ export function PairingPage() {
     const fetchModules = async () => {
       try {
         const response = await axios.get<ModuleDto[]>('http://localhost:3000/module');
-        const inModulesData = response.data.filter((module) => module.type === 'IN');
-        const outModulesData = response.data.filter((module) => module.type === 'OUT');
+
+        // Filtrer les modules où pair_id est null ou n'existe pas
+        const inModulesData = response.data
+          .filter((module) => module.type === 'IN' && (module.pair_id === null || !module.pair_id)); // Vérifie si pair_id est null ou non défini
+        const outModulesData = response.data
+          .filter((module) => module.type === 'OUT' && (module.pair_id === null || !module.pair_id)); // Vérifie si pair_id est null ou non défini
 
         setInModules(inModulesData);
         setOutModules(outModulesData);
@@ -56,30 +65,32 @@ export function PairingPage() {
       // Par exemple, une requête PATCH ou POST selon l'API que tu utilises.
     }
     try {
-            await axios.put(`http://localhost:3000/module`, {
-                moduleInId: selectedIn?.id,
-                moduleOutId: selectedOut?.id
-            });
+      await axios.put(`http://localhost:3000/module`, {
+        moduleInId: selectedIn?.id,
+        moduleOutId: selectedOut?.id,
+      });
 
-            toast.success("Les modules ont été appairés avec succès");
+      toast.success("Les modules ont été appairés avec succès");
+      refreshData(); // Mettre à jour les données après appairage
+      closeModal(); // Fermer la modale après l'appairage
     } catch (error) {
-        console.error("Erreur lors de l'envoi des données:", error);
-        toast.error("Une erreur s'est produite lors de l'appairage");
+      console.error("Erreur lors de l'envoi des données:", error);
+      toast.error("Une erreur s'est produite lors de l'appairage");
     }
   };
 
   return (
-    <div className="p-4">
+    <div className="p-6 space-y-4 max-w-4xl mx-auto">
       {/* Conteneur des tableaux IN et OUT */}
-      <div className="flex space-x-4 mb-6">
+      <div className="flex flex-col md:flex-row space-x-4 mb-6">
         {/* Tableau IN */}
-        <div className="w-1/2">
-          <h2 className="text-xl mb-4">Modules IN</h2>
+        <div className="w-full md:w-1/2">
+          <h2 className="text-xl font-semibold mb-4">Modules IN</h2>
           <ul className="space-y-2">
             {inModules.map((module) => (
               <li
                 key={module.id}
-                className={`p-2 border ${selectedIn?.id === module.id ? "bg-blue-200" : "bg-gray-100"}`}
+                className={`p-2 border rounded cursor-pointer ${selectedIn?.id === module.id ? "bg-blue-200" : "bg-gray-100"}`}
                 onClick={() => handleInSelect(module)}
               >
                 {module.hostname}
@@ -89,13 +100,13 @@ export function PairingPage() {
         </div>
 
         {/* Tableau OUT */}
-        <div className="w-1/2">
-          <h2 className="text-xl mb-4">Modules OUT</h2>
+        <div className="w-full md:w-1/2">
+          <h2 className="text-xl font-semibold mb-4">Modules OUT</h2>
           <ul className="space-y-2">
             {outModules.map((module) => (
               <li
                 key={module.id}
-                className={`p-2 border ${selectedOut?.id === module.id ? "bg-blue-200" : "bg-gray-100"}`}
+                className={`p-2 border rounded cursor-pointer ${selectedOut?.id === module.id ? "bg-blue-200" : "bg-gray-100"}`}
                 onClick={() => handleOutSelect(module)}
               >
                 {module.hostname}
@@ -108,7 +119,7 @@ export function PairingPage() {
       {/* Bouton Appairer sous les tableaux */}
       {isPairingVisible && (
         <div className="w-full flex justify-center mt-6">
-          <Button onClick={handlePairing} className="bg-green-500 text-white">
+          <Button onClick={handlePairing} className="bg-green-500 text-white py-2 px-6 rounded-md">
             Appairer
           </Button>
         </div>

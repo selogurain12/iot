@@ -7,6 +7,7 @@ export interface AccessLog {
     name?: string;
     firstname?: string;
     email?: string;
+    user_id: string;
 
     [key: string]: string | number | Date | undefined | boolean;
   }

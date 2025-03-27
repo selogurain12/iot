@@ -9,6 +9,7 @@ import { useAuth } from "../../context/authContext";
 import { CardDto } from "../dtos/card.dto";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
+import { PairingDto } from "../dtos/paring_module.dto";
 
 interface AddCardProps {
     closeModal: () => void;
@@ -18,10 +19,12 @@ interface AddCardProps {
 export function AddCard({ closeModal, refreshData }: AddCardProps) {
     const [data, setData] = useState<UserDto[]>([]);
     const [card, setCard] = useState<CardDto[]>([]);
+    const [pairing, setPairing] = useState<PairingDto[]>([]);
     const [pin, setpin] = useState("");
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>("");
     const [selectedCard, setSelectedCard] = useState<CardDto | undefined>(undefined); // Type modifié ici
+    const [selectedPairing, setSelectedPairing] = useState<PairingDto | undefined>(undefined); // Nouveau state pour les appairages
     const { token } = useAuth();
 
     useEffect(() => {
@@ -37,8 +40,13 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
                 const cardData = await axios.get<CardDto[]>(
                     `http://localhost:3000/rfid`
                 );
+
+                const pairingData = await axios.get<PairingDto[]>(
+                    `http://localhost:3000/module/pairing`
+                );
                 const unassignedCards = cardData.data.filter(card => card.user_id === null);
                 setData(response.data);
+                setPairing(pairingData.data)
                 setCard(unassignedCards);
             } catch (error) {
                 console.error("Erreur lors de la récupération des utilisateurs :", error);
@@ -57,12 +65,14 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
             toast.error("Veuillez entrer un code PIN.");
             return;
         }
-    
+        console.log(selectedPairing)
         try {
             if (selectedCard) { // Vérifie si une carte est sélectionnée
                 await axios.put(`http://localhost:3000/rfid/${selectedCard.id}`, {
                     card_id: selectedCard.card_id,
-                    user_id: selectedUser
+                    user_id: selectedUser,
+                    module_id: selectedPairing?.pairing_id,
+                    is_active: true
                 });
     
                 await axios.post(`http://localhost:3000/access`, {
@@ -143,6 +153,29 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
                                     value={pin}
                                     onChange={(e) => setpin(e.target.value)}
                                 />
+                            </div>
+                        )}
+                        {pairing && selectedUser && (
+                            <div className="space-y-1">
+                                <Label htmlFor="pairing">Choisir un appairage</Label>
+                                <Select value={selectedPairing?.pairing_id} onValueChange={(value) => {
+                                    const pairingSelected = pairing.find(p => p.pairing_id === value);
+                                    setSelectedPairing(pairingSelected);                                    
+                                }}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Sélectionner un appairage" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Appairages disponibles</SelectLabel>
+                                            {pairing.map((pair) => (
+                                                <SelectItem key={pair.pairing_id} value={pair.pairing_id}>
+                                                    {pair.module_in_hostname} - {pair.module_out_hostname}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         )}
                     </CardContent>

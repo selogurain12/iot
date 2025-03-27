@@ -229,7 +229,7 @@ const logAccessAttempt = async (identifier, userId, success, message) => {
 };
 
 const allLogs = async() => {
-    const query = await client.query('SELECT * FROM access_logs ORDER BY created_at DESC')
+    const query = await client.query('SELECT * FROM access_logs')
     return query.rows;
 }
 

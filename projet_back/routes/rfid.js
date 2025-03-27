@@ -399,10 +399,9 @@ router.post("/verify-access", async (req, res) => {
     }
 });
 
-router.get("/access_logs", async (req, res) => {
+router.get("/access_logs/all", async (req, res) => {
     try {
      const access = await allLogs();
-     console.log(access)
       res.json(access);
     } catch (error) {
         errorHandler(res, error);

@@ -1,6 +1,6 @@
 import { AppSidebar } from "../sidebar/app-sidebar";
 import { SidebarProvider } from "../ui/sidebar";
-import { PairingPage } from "./apparaiage";
+import { ModuleTable } from "./module_table";
 
 export function ListModules() {
     return (
@@ -11,7 +11,7 @@ export function ListModules() {
             <main className="h-full w-full flex-auto overflow-auto antialiased">
                 <p className="text-5xl text-center">Modules</p>
                 <div className="p-5">
-                    <PairingPage />
+                    <ModuleTable />
                 </div>
             </main>
         </div>

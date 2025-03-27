@@ -2,6 +2,7 @@ const client = require("./db");
 
 const getAllModules = async () => {
     const modules = await client.query('SELECT * FROM module');
+    
     let formatModules = await Promise.all(modules.rows.map(async (module) => {
         if (module.pair_id === null) {
             return {
@@ -10,20 +11,47 @@ const getAllModules = async () => {
                 type: module.type
             };
         } else {
-            const pair_name = await client.query('SELECT * FROM module WHERE id = $1', [module.pair_id]);
+            // Requête pour récupérer le nom du module associé
+            const pair_name_result = await client.query('SELECT * FROM module WHERE id = $1', [module.pair_id]);
+            
+            // Vérifie si le module associé existe
+            if (pair_name_result.rows.length === 0) {
+                return {
+                    id: module.id,
+                    hostname: module.hostname,
+                    type: module.type,
+                    error: "Module associé non trouvé"
+                };
+            }
+            
+            const pair_name = pair_name_result.rows[0];
             let pair_id = "";
+
+            // Requête pour obtenir le pair_id
             if (module.type === 'IN') {
-                pair_id = await client.query('SELECT id FROM module_pairing WHERE module_in_id = $1 and module_out_id = $2', [module.id, module.pair_id]);
+                const pair_id_result = await client.query('SELECT id FROM module_pairing WHERE module_in_id = $1 and module_out_id = $2', [module.id, module.pair_id]);
+                // Vérifie si la requête pour le pair_id a retourné des résultats
+                if (pair_id_result.rows.length > 0) {
+                    pair_id = pair_id_result.rows[0].id;
+                } else {
+                    pair_id = "Aucun appairage trouvé";
+                }
             } else {
-                pair_id = await client.query('SELECT id FROM module_pairing WHERE module_in_id = $2 and module_out_id = $1', [module.id, module.pair_id]);
+                const pair_id_result = await client.query('SELECT id FROM module_pairing WHERE module_in_id = $2 and module_out_id = $1', [module.id, module.pair_id]);
+                // Vérifie si la requête pour le pair_id a retourné des résultats
+                if (pair_id_result.rows.length > 0) {
+                    pair_id = pair_id_result.rows[0].id;
+                } else {
+                    pair_id = "Aucun appairage trouvé";
+                }
             }
 
-            console.log("pair_id : " + pair_id.rows[0].id);
             return {
                 id: module.id,
                 hostname: module.hostname,
-                pair_hostname: pair_name.rows[0].hostname,
-                type: module.type
+                pair_hostname: pair_name.hostname,
+                type: module.type,
+                pair_id: pair_id
             };
         }
     }));
@@ -32,8 +60,25 @@ const getAllModules = async () => {
 };
 
 const getModulePairing = async () => {
-    return await client.query('SELECT id FROM module_pairing');
-}
+    // Requête pour obtenir les appairages et les informations des modules associés
+    const modulePairingQuery = `
+        SELECT 
+            mp.id AS pairing_id,
+            m_in.hostname AS module_in_hostname,
+            m_out.hostname AS module_out_hostname
+        FROM 
+            module_pairing mp
+        JOIN 
+            module m_in ON mp.module_in_id = m_in.id
+        JOIN 
+            module m_out ON mp.module_out_id = m_out.id;
+    `;
+    const result = await client.query(modulePairingQuery);
+
+    // Retourner les résultats avec les hostnames des modules
+    return result.rows;
+};
+
 
 // isPairing = false => unpair
 const pairOrUnpairModules = async (moduleInId, moduleOutId, isPairing) => {
