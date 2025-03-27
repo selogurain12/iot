@@ -163,3 +163,48 @@ ALTER TABLE IF EXISTS public.module
 
 
 GRANT ALL ON TABLE public.module TO postgres;
+
+CREATE TABLE IF NOT EXISTS public.module_pairing
+(
+    id uuid NOT NULL DEFAULT gen_random_uuid(), -- Ajout d'un ID unique pour la paire
+    module_in_id uuid NOT NULL,
+    module_out_id uuid NOT NULL,
+    paired_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT module_pairing_pkey PRIMARY KEY (id), -- Clé primaire sur l'ID unique
+    CONSTRAINT module_pairing_module_in_fkey FOREIGN KEY (module_in_id)
+        REFERENCES public.module (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT module_pairing_module_out_fkey FOREIGN KEY (module_out_id)
+        REFERENCES public.module (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT module_pairing_check CHECK (module_in_id <> module_out_id)
+);
+
+ALTER TABLE IF EXISTS public.module_pairing
+    OWNER to postgres;
+
+GRANT ALL ON TABLE public.module_pairing TO postgres;
+
+CREATE TABLE public.module_rfid
+(
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    module_pairing_id uuid NOT NULL, -- Référence vers module_pairing
+    rfid_id uuid NOT NULL,
+    assigned_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT module_rfid_pkey PRIMARY KEY (id),
+    CONSTRAINT module_rfid_pairing_fkey FOREIGN KEY (module_pairing_id)
+        REFERENCES public.module_pairing (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT module_rfid_rfid_fkey FOREIGN KEY (rfid_id)
+        REFERENCES public.rfid_cards (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+ALTER TABLE IF EXISTS public.module_rfid
+    OWNER to postgres;
+
+GRANT ALL ON TABLE public.module_rfid TO postgres;
