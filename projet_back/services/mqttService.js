@@ -171,6 +171,7 @@ const handleCardDetection = async (moduleId, cardId) => {
             'SELECT * FROM module WHERE id = $1',
             [moduleId]
         );
+        // checker si la carte est authorisée a acceder a la porte
         if (existingCard) {
             // check if the card is associated with a user (check userid)
             if (!existingCard.user_id) {
@@ -178,9 +179,54 @@ const handleCardDetection = async (moduleId, cardId) => {
                 publish(`/in/${inputModule.rows[0].hostname}/existingcard`, "0");
                 return existingCard;
             }
-            console.log(`ℹ️ RFID card ${cardId} already exists in database with ID: ${existingCard.id}`);
 
-            publish(`/in/${inputModule.rows[0].hostname}/existingcard`, "1");
+            // Vérifier si la carte est active
+            if (!existingCard.is_active) {
+                console.log(`❌ RFID card ${cardId} is inactive`);
+
+                // Publier au module d'entrée que la carte est inactive
+                publish(`/in/${inputModule.rows[0].hostname}/existingcard`, "3");
+
+                return existingCard;
+            }
+
+            // Vérifier si la carte a une autorisation pour ce module spécifique
+            // Récupérer l'ID du pairing module qui contient ce module d'entrée
+            const pairingResult = await pgClient.query(
+                'SELECT id FROM module_pairing WHERE module_in_id = $1',
+                [moduleId]
+            );
+
+            let hasSpecificAccess = false;
+
+            if (pairingResult.rows.length > 0) {
+                // Vérifier si la carte a une autorisation spécifique pour ce pairing de modules
+                const moduleAccessResult = await pgClient.query(
+                    'SELECT * FROM module_rfid WHERE module_pairing_id = $1 AND rfid_id = $2',
+                    [pairingResult.rows[0].id, existingCard.id]
+                );
+
+                hasSpecificAccess = moduleAccessResult.rows.length > 0;
+            }
+
+            // Si pas d'autorisation spécifique requise ou si l'autorisation spécifique est présente
+            // On considère la carte comme autorisée (car elle est active et associée à un utilisateur)
+            const isAuthorized = !pairingResult.rows.length || hasSpecificAccess;
+
+            if (isAuthorized) {
+                console.log(`✅ RFID card ${cardId} is authorized for access`);
+
+                // Publier au module d'entrée que la carte est autorisée
+                publish(`/in/${inputModule.rows[0].hostname}/existingcard`, "1");
+
+            } else {
+                console.log(`❌ RFID card ${cardId} is not authorized for this module`);
+
+                // Publier au module d'entrée que la carte n'est pas autorisée pour ce module
+                publish(`/in/${inputModule.rows[0].hostname}/existingcard`, "2");
+            }
+
+
 
             return existingCard;
         } else {
