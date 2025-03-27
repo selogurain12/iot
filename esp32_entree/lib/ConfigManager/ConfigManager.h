@@ -1,7 +1,7 @@
 #ifndef CONFIG_MANAGER_H
 #define CONFIG_MANAGER_H
 
-#define MAX_RESET_COUNT 5
+#define MAX_RESET_COUNT 3
 
 #include <Preferences.h>
 

@@ -60,7 +60,7 @@ void resetManager()
 {
   prefs.begin("reset", false);
   int resetCount = 0;
-  prefs.putInt("resetCount", resetCount);
+  resetCount = prefs.getInt("resetCount", 0);
   resetCount++;
   Serial.print("Reset count: ");
   Serial.println(resetCount);
