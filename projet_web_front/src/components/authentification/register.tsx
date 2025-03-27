@@ -10,7 +10,7 @@ import { CardFooter } from "../ui/cards/card-footer";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/authContext";
+import { useAuth } from "../../context/authContext";
 
 export function Register() {
   const navigate = useNavigate();
@@ -38,7 +38,13 @@ export function Register() {
           const { user, token } = response.data;
           signIn(user, token, 3600);
           toast.success("Vous êtes bien inscrit");
-          navigate("/");  // Redirection après inscription (peut être personnalisée)
+          if (user.role === "admin") {
+            navigate("/userlist");  // Rediriger vers la page des utilisateurs pour les admins
+        } else if (user.role === "user") {
+            navigate("/historic");  // Rediriger vers l'historique pour les utilisateurs
+        } else {
+            navigate("/");  // Si aucun rôle, rediriger vers la page d'accueil (ou une autre page par défaut)
+        }
       } catch (error) {
           console.error("Erreur lors de l'envoi des données:", error);
       }
