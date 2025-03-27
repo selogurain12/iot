@@ -24,6 +24,7 @@ services:
       - 1883:1883
       - 9001:9001
     volumes:
+      - ./docker/mosquitto.conf:/mosquitto/config/mosquitto.conf:rw
       - ./docker/mosquitto-pwfile:/mosquitto/config/pwfile:rw
 
   backend:
@@ -43,3 +44,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  frontend:
+    build:
+      context: ./projet_web_front
+      dockerfile: Dockerfile
+    restart: always
+    working_dir: /usr/src/app
+    volumes:
+      - ./projet_web_front:/usr/src/app
+    ports:
+      - "8080:5173"
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    command: sh -c "npm ci && npm run dev -- --host"
