@@ -1,108 +1,122 @@
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import { Button } from "../ui/button";
-import { useEffect, useState } from "react";
+import { Select, SelectItem, SelectTrigger, SelectContent, SelectLabel, SelectGroup, SelectValue } from "../ui/select";
 import axios from "axios";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { DatePicker } from "../ui/date-picker";
+import { useEffect, useState } from "react";
+import { UserDto } from "../dtos/user.dto";
+import { useAuth } from "../../context/authContext";
 import { CardDto } from "../dtos/card.dto";
-import { Textarea } from "../ui/textarea";
 
 interface UpdateCardProps {
     closeModal: () => void;
+    refreshData: () => Promise<void>;
     id: string;
 }
 
-export function UpdateCard({ closeModal, id }: UpdateCardProps) {
-    const navigate = useNavigate();
-    const [date, setDate] = useState<Date>();
-    const [name, setname] = useState("");
-    const [information, setInformation] = useState("");
-    const [data, setData] = useState<CardDto>();
+export function UpdateCard({ closeModal, id, refreshData }: UpdateCardProps) {
+    const [data, setData] = useState<UserDto[]>([]);
+    const [card, setCard] = useState<CardDto | undefined>(undefined); // Initialiser à undefined
     const [loading, setLoading] = useState(true);
+    const [selectedUser, setSelectedUser] = useState<string>("");
+    const { token } = useAuth();
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await axios.get<CardDto>(
-                    `http://localhost:3000/users/${id}`
+                    `http://localhost:3000/rfid/card/${id}`
                 );
-                setData(response.data);
+                setCard(response.data);
             } catch (error) {
-                console.error("Erreur lors de la récupération des utilisateurs :", error);
+                console.error("Erreur lors de la récupération des informations de la carte :", error);
             } finally {
                 setLoading(false);
             }
         };
-    
+
         fetchData();
     }, [id]);
-    
-    // New useEffect to update state when data is fetched
+
     useEffect(() => {
-        if (data) {
-            setDate(data.date ? new Date(data.date) : undefined);
-            setname(data.name);
-            setInformation(data.information);
+        if (card) {
+            setSelectedUser(card.user_id);
         }
-    }, [data]); // This ensures state updates only when `data` changes
-    
+    }, [card]);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const response = await axios.get<UserDto[]>(
+                    `http://localhost:3000/users`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+                setData(response.data);
+            } catch (error) {
+                console.error("Erreur lors de la récupération des utilisateurs :", error);
+            }
+        };
+
+        fetchUsers();
+    }, [token]);
 
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
-        
         try {
-            await axios.post("http://localhost:3000/users", {
-                date,
-                name,
-                information,
+            // Assurez-vous de soumettre l'ID de l'utilisateur sélectionné ici
+            await axios.put(`http://localhost:3000/rfid/${card?.id}`, {
+                card_id: card?.card_id, // Utiliser card_id directement
+                user_id: selectedUser
             });
-
-            toast.success("L'utilisateur a bien été créé");
-            navigate("/userlist");
+            toast.success("Carte RFID mise à jour avec succès");
+            refreshData();
             closeModal();
         } catch (error) {
-            console.error("Erreur lors de l'envoi des données:", error);
+            console.error("Erreur lors de la mise à jour de la carte:", error);
         }
     };
-
-    if (loading) return <p>Chargement...</p>;
 
     return (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
             <div className="bg-white rounded-lg shadow-lg w-[400px]">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Modifier un utilisateur</CardTitle>
+                        <CardTitle>Modifier une carte RFID</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                        <div className="space-y-1">
-                            <Label htmlFor="name">Nom</Label>
-                            <Input
-                                id="name"
-                                value={name}
-                                onChange={(e) => setname(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label htmlFor="date">Date</Label>
-                            <DatePicker
-                                id="date"
-                                value={date instanceof Date ? date.toISOString().split("T")[0] : ""}
-                                onChange={(e) => setDate(new Date(e.target.value))}
-                                changeValue={(newValue: string) => setDate(new Date(newValue))}
-                                disabledRange={undefined}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label htmlFor="information">Information</Label>
-                            <Textarea
-                                id="information"
-                                value={information}
-                                onChange={(e) => setInformation(e.target.value)}
-                            />
-                        </div>
+                        {loading ? (
+                            <p>Chargement des informations...</p>
+                        ) : (
+                            <div>
+                                {/* Affichage de card_id */}
+                                <p><strong>Card ID:</strong> {card?.card_id}</p>
+                            </div>
+                        )}
+
+                        {loading ? (
+                            <p>Chargement des utilisateurs...</p>
+                        ) : (
+                            <div className="space-y-1">
+                                <Select value={selectedUser} onValueChange={setSelectedUser}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Sélectionner un utilisateur" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Choisir un utilisateur</SelectLabel>
+                                            {data.map((user) => (
+                                                <SelectItem key={user.id} value={user.id}>
+                                                    {user.firstname} {user.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                     </CardContent>
                     <CardFooter className="flex justify-between">
                         <Button onClick={handleSubmit}>Confirmer</Button>

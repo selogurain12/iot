@@ -176,18 +176,36 @@ router.post("/register", async (req, res) => {
  */
 router.put("/update/:id", async (req, res) => {
     try {
-        const { email, firstname, name, password } = req.body;
-        if (!email) return res.status(400).json({ error: "email is required" });
-        if (!firstname) return res.status(400).json({ error: "firstname is required" });
-        if (!name) return res.status(400).json({ error: "name is required" });
-        if (!password) return res.status(400).json({ error: "password is required" });
+        const { email, firstname, name, password, newPassword } = req.body;
+        if (!email) return res.status(400).json({ error: "email est requis" });
+        if (!firstname) return res.status(400).json({ error: "firstname est requis" });
+        if (!name) return res.status(400).json({ error: "name est requis" });
 
         const user = await getUserByIdBd(req.params.id);
         if (!user) return res.status(404).json({ error: "User not found" });
 
-        const updatedUser = await updateUser(req.params.id, email, firstname, name, password);
-        res.json(updatedUser);
+        if (password) {
+            if (!user.password) {
+                return res.status(500).json({ error: "Le mot de passe de l'utilisateur n'est pas valide" });
+            }
+
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+                return res.status(400).json({ error: "Mot de passe actuel incorrect" });
+            }
+        }
+
+        let updatedPassword = user.password;
+        if (newPassword) {
+            const hashedNewPassword = await bcrypt.hash(newPassword, 10); 
+            updatedPassword = hashedNewPassword;
+        }
+
+        await updateUser(req.params.id, email, firstname, name, updatedPassword);
+
+        res.json({ message: "Utilisateur mis à jour avec succès" });
     } catch (error) {
+        console.error(error);
         errorHandler(res, error);
     }
 });
@@ -264,7 +282,8 @@ router.get("/exists/:email", async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const token = await login(req.body);
-        res.status(200).json({ token });
+        const user = await getUsersByEmail(req.body.email)
+        res.status(200).json({ token, user });
     } catch (error) {
         res.status(401).json({ error: error.message });
     }

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllRfids, createRfid, updateRfid, deleteRfid, getRfidByCardId } = require('../services/rfidService');
-const { verifyAccess } = require('../services/accessService');
+const { getAllRfids, createRfid, updateRfid, deleteRfid, getRfidByCardId, getRfidById, verifyAccess, allLogs } = require('../services/rfidService');
 const errorHandler = require("../utils/errorHandler");
 
 /**
@@ -122,6 +121,18 @@ router.get("/", async (req, res) => {
 router.get("/card/:cardId", async (req, res) => {
     try {
         const rfid = await getRfidByCardId(req.params.cardId);
+        if (!rfid) {
+            return res.status(404).json({ error: "RFID card not found" });
+        }
+        res.json(rfid);
+    } catch (error) {
+        errorHandler(res, error);
+    }
+});
+
+router.get("/:id", async (req, res) => {
+    try {
+        const rfid = await getRfidById(req.params.id);
         if (!rfid) {
             return res.status(404).json({ error: "RFID card not found" });
         }
@@ -388,4 +399,12 @@ router.post("/verify-access", async (req, res) => {
     }
 });
 
+router.get("/access_logs/all", async (req, res) => {
+    try {
+     const access = await allLogs();
+      res.json(access);
+    } catch (error) {
+        errorHandler(res, error);
+    }
+  });
 module.exports = router;

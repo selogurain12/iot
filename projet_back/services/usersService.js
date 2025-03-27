@@ -7,7 +7,7 @@ const SECRET_KEY = process.env.SECRET_KEY;
 // Récupère un utilisateur via son ID en base de données
 const getUserByIdBd = async (id) => {
     const user = await client.query('SELECT * FROM users WHERE id = $1::uuid', [id]);
-    return user;
+    return user.rows[0];
 };
 
 // Récupère une liste de User par le name
@@ -17,7 +17,7 @@ const getUsersByEmail = async (email) => {
             'SELECT * FROM users WHERE email LIKE $1',
             [email]
         );
-        return result.rows;
+        return result.rows[0];
     } catch (error) {
         throw new Error(error);
     }
@@ -117,7 +117,14 @@ function verifyToken(req, res, next) {
         return res.status(403).json({ error: 'No token provided' });
     }
 
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (!token.startsWith('Bearer ')) {
+        return res.status(403).json({ error: 'Invalid token format' });
+    }
+
+    const bearerToken = token.split(' ')[1];
+
+    jwt.verify(bearerToken, SECRET_KEY, (err, decoded) => {
+        console.log(token)
         if (err) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
@@ -133,14 +140,20 @@ function verifyTokenAdmin(req, res, next) {
         return res.status(403).json({ error: 'No token provided' });
     }
 
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (!token.startsWith('Bearer ')) {
+        return res.status(403).json({ error: 'Invalid token format' });
+    }
+
+    const bearerToken = token.split(' ')[1];
+
+    jwt.verify(bearerToken, SECRET_KEY, (err, decoded) => {
         if (err) {
             return res.status(401).json({ error: 'Invalid token' });
         }
+
         console.log(decoded);
 
         if (decoded.role !== 'admin') {
-
             return res.status(403).json({ error: 'Unauthorized' });
         }
 

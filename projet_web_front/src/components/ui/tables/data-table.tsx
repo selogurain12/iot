@@ -1,19 +1,19 @@
 import {
-	flexRender,
+    flexRender,
+    useReactTable,
+    type ColumnDef,
+    type VisibilityState,
+    type ColumnFiltersState,
+    type SortingState,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    getFacetedRowModel,
+    getFacetedUniqueValues,
+    type PaginationState,
+    type Updater,
+    type Cell,
 	getCoreRowModel,
-	useReactTable,
-	type ColumnDef,
-	type VisibilityState,
-	type ColumnFiltersState,
-	type SortingState,
-	getFilteredRowModel,
-	getPaginationRowModel,
-	getSortedRowModel,
-	getFacetedRowModel,
-	getFacetedUniqueValues,
-	type PaginationState,
-	type Updater,
-	type Cell,
 } from "@tanstack/react-table";
 import { useState, type HTMLAttributes } from "react";
 
@@ -29,191 +29,186 @@ import { DataTablePagination } from "./table-pagination";
 import { TableHead } from "./table-head";
 
 interface TableProps<Tdata, Value> extends HTMLAttributes<HTMLDivElement> {
-	columns: ColumnDef<Tdata, Value>[];
-	data?: Tdata[];
-	isLoading?: boolean;
-	total: number;
-	setItemsPerPage: (itemsPerPage: number) => void;
-	setPage: (page: number) => void;
-	setSearch: (search?: string) => void;
-	defaultItemsPerPage?: number;
-	onCellClick?: (cell: Cell<Tdata, unknown>) => void;
-	toolbarProps?: { [key: string]: unknown };
+    columns: ColumnDef<Tdata, Value>[];
+    data?: Tdata[];
+    isLoading?: boolean;
+    total: number;
+    setItemsPerPage: (itemsPerPage: number) => void;
+    setPage: (page: number) => void;
+    setSearch: (search?: string) => void;
+    defaultItemsPerPage?: number;
+    onCellClick?: (cell: Cell<Tdata, unknown>) => void; // Accepte un objet Cell de type Tdata
+    toolbarProps?: { [key: string]: unknown };
 }
 
 export function DataTable<Tdata extends { [key: string]: unknown }, Value>({
-	className,
-	columns,
-	data = [] as Tdata[],
-	total,
-	isLoading = false,
-	defaultItemsPerPage = 10,
-	setItemsPerPage,
-	setPage,
-	onCellClick = undefined,
+    className,
+    columns,
+    data = [] as Tdata[],
+    total,
+    isLoading = false,
+    defaultItemsPerPage = 10,
+    setItemsPerPage,
+    setPage,
+    onCellClick = undefined,
 }: TableProps<Tdata, Value>) {
-	const [rowSelection, setRowSelection] = useState({});
-	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-		{}
-	);
-	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-	const [sorting, setSorting] = useState<SortingState>([]);
-	const [pageSize, setPageSize] = useState(defaultItemsPerPage);
-	const [pageIndex, setPageIndex] = useState(0);
+    const [rowSelection, setRowSelection] = useState({});
+    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const [pageSize, setPageSize] = useState(defaultItemsPerPage);
+    const [pageIndex, setPageIndex] = useState(0);
 
-	const table = useReactTable({
-		data,
-		columns,
-		pageCount: Math.max(1, Math.ceil(total / pageSize)),
+    const table = useReactTable({
+        data,
+        columns,
+        pageCount: Math.max(1, Math.ceil(total / pageSize)),
 
-		state: {
-			sorting,
-			columnVisibility,
-			rowSelection,
-			columnFilters,
+        state: {
+            sorting,
+            columnVisibility,
+            rowSelection,
+            columnFilters,
 
-			pagination: {
-				pageSize,
-				pageIndex,
-			},
-		},
+            pagination: {
+                pageSize,
+                pageIndex,
+            },
+        },
 
-		defaultColumn: {
-			size: 150,
-			minSize: 100,
-		},
+        defaultColumn: {
+            size: 150,
+            minSize: 100,
+        },
 
-		enableRowSelection: true,
-		onRowSelectionChange: setRowSelection,
+        enableRowSelection: true,
+        onRowSelectionChange: setRowSelection,
 
-		manualFiltering: true,
+        manualFiltering: true,
 
-		onPaginationChange: (updater: Updater<PaginationState>) => {
-			if (typeof updater === "function") {
-				setPageSize((previousPageSize) => {
-					const temporaryPreviousState: PaginationState = {
-						pageSize: previousPageSize,
-						pageIndex: 0,
-					};
+        onPaginationChange: (updater: Updater<PaginationState>) => {
+            if (typeof updater === "function") {
+                setPageSize((previousPageSize) => {
+                    const temporaryPreviousState: PaginationState = {
+                        pageSize: previousPageSize,
+                        pageIndex: 0,
+                    };
 
-					const newState = updater(temporaryPreviousState);
+                    const newState = updater(temporaryPreviousState);
 
-					return newState.pageSize;
-				});
+                    return newState.pageSize;
+                });
 
-				setPageIndex((previousPageIndex) => {
-					const temporaryPreviousState: PaginationState = {
-						pageSize,
-						pageIndex: previousPageIndex,
-					};
+                setPageIndex((previousPageIndex) => {
+                    const temporaryPreviousState: PaginationState = {
+                        pageSize,
+                        pageIndex: previousPageIndex,
+                    };
 
-					const newState = updater(temporaryPreviousState);
+                    const newState = updater(temporaryPreviousState);
 
-					return newState.pageIndex;
-				});
-			} else {
-				setPageSize(updater.pageSize);
-				setPageIndex(updater.pageIndex);
-			}
-		},
+                    return newState.pageIndex;
+                });
+            } else {
+                setPageSize(updater.pageSize);
+                setPageIndex(updater.pageIndex);
+            }
+        },
 
-		onSortingChange: setSorting,
-		onColumnFiltersChange: setColumnFilters,
-		onColumnVisibilityChange: setColumnVisibility,
-		getCoreRowModel: getCoreRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		getFacetedRowModel: getFacetedRowModel(),
-		getFacetedUniqueValues: getFacetedUniqueValues(),
-		manualPagination: true,
-	});
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        onColumnVisibilityChange: setColumnVisibility,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFacetedRowModel: getFacetedRowModel(),
+        getFacetedUniqueValues: getFacetedUniqueValues(),
+        manualPagination: true,
+    });
 
-	return (
-		<div className={cn("space-y-6 flex flex-col", className)}>
-			<div className="flex-grow flex-shrink rounded-2xl">
-				<Table className="bg-white rounded-2xl">
-					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow
-								className="hover:bg-white"
-								key={headerGroup.id}
-							>
-								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id}>
-										{header.isPlaceholder
-											? null
-											: flexRender(
-													header.column.columnDef
-														.header,
-													header.getContext()
-												)}
-									</TableHead>
-								))}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{isLoading ? (
-							<TableRow>
-								<TableCell
-									className="h-24 md:h-zoom-24 text-center"
-									colSpan={columns.length}
-								>
-									<Spinner />
-								</TableCell>
-							</TableRow>
-						) : table.getRowModel().rows.length > 0 ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow
-									className={cn(
-										onCellClick !== undefined &&
-											"hover:cursor-pointer"
-									)}
-									data-state={
-										row.getIsSelected() && "selected"
-									}
-									key={row.id}
-								>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell
-											key={cell.id}
-											onClick={() => {
-												onCellClick?.(cell);
-											}}
-										>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext()
-											)}
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell
-									className="h-24 text-center"
-									colSpan={columns.length}
-								>
-									Aucun résultat
-								</TableCell>
-							</TableRow>
-						)}
-					</TableBody>
-				</Table>
-			</div>
-			<DataTablePagination
-				setItemsPerPage={(newPageSize) => {
-					setPageSize(newPageSize);
-					setItemsPerPage(newPageSize);
-				}}
-				setPage={(newPageIndex) => {
-					setPageIndex(newPageIndex);
-					setPage(newPageIndex + 1);
-				}}
-				table={table}
-			/>
-		</div>
-	);
+    return (
+        <div className={cn("space-y-6 flex flex-col", className)}>
+            <div className="flex-grow flex-shrink rounded-2xl">
+                <Table className="bg-white rounded-2xl">
+                    <TableHeader>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow
+                                className="hover:bg-white"
+                                key={headerGroup.id}
+                            >
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead key={header.id}>
+                                        {header.isPlaceholder
+                                            ? null
+                                            : flexRender(
+                                                  header.column.columnDef.header,
+                                                  header.getContext()
+                                              )}
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+                    <TableBody>
+    {isLoading ? (
+        <TableRow>
+            <TableCell
+                className="h-24 md:h-zoom-24 text-center"
+                colSpan={columns.length}
+            >
+                <Spinner />
+            </TableCell>
+        </TableRow>
+    ) : table.getRowModel().rows.length > 0 ? (
+        table.getRowModel().rows.map((row) => (
+            <TableRow
+                className={cn(
+                    onCellClick !== undefined && "hover:cursor-pointer"
+                )}
+                data-state={row.getIsSelected() && "selected"}
+                key={row.id}
+            >
+                {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                        key={cell.id}
+                        onClick={() => {
+                            // On passe la cellule (cell) et non la ligne (row)
+                            onCellClick?.(cell);  // Passer un objet `Cell`
+                        }}
+                    >
+                        {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                        )}
+                    </TableCell>
+                ))}
+            </TableRow>
+        ))
+    ) : (
+        <TableRow>
+            <TableCell
+                className="h-24 text-center"
+                colSpan={columns.length}
+            >
+                Aucun résultat
+            </TableCell>
+        </TableRow>
+    )}
+</TableBody>
+                </Table>
+            </div>
+            <DataTablePagination
+                setItemsPerPage={(newPageSize) => {
+                    setPageSize(newPageSize);
+                    setItemsPerPage(newPageSize);
+                }}
+                setPage={(newPageIndex) => {
+                    setPageIndex(newPageIndex);
+                    setPage(newPageIndex + 1);
+                }}
+                table={table}
+            />
+        </div>
+    );
 }

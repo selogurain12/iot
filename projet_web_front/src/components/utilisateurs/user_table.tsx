@@ -7,8 +7,8 @@ import { UpdateUserModal } from "./update_user";
 import { DeleteUser } from "./delete_user";
 import { CreateUserModal } from "./create_user";
 import { Button } from "../ui/button";
-import { AddCard } from "./add_card";
-import { UpdatePIN } from "./update_pin";
+import { useAuth } from "../../context/authContext";
+import { AssociateCard } from "./associate_user";
 
 export function UserTable() {
     const [data, setData] = useState<UserDto[]>([]);
@@ -19,20 +19,24 @@ export function UserTable() {
     const [isModalDeleteOpen, setIsModalDeleteOpen] = useState(false);
     const [isModalCreateOpen, setIsModalCreateOpen] = useState(false);
     const [isModalAssociateOpen, setIsModalAssociateOpen] = useState(false);
-    const [isModalUpdatePinOpen, setIsModalUpdatePinOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-
+    const { token } = useAuth();
+    console.log(token)
     // Fonction pour rafraîchir les données
     const refreshData = useCallback(async () => {
         try {
             const response = await axios.get<UserDto[]>(
-                `http://localhost:3000/users?page=${page}&limit=${itemsPerPage}&search=${search}`
+                `http://localhost:3000/users?page=${page}&limit=${itemsPerPage}&search=${search}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
             );
             setData(response.data);
         } catch (error) {
             console.error("Erreur lors de la récupération des utilisateurs :", error);
         }
-    }, [page, itemsPerPage, search]);
+    }, [page, itemsPerPage, search, token]);
 
     useEffect(() => {
         refreshData();
@@ -63,20 +67,11 @@ export function UserTable() {
         setIsModalAssociateOpen(true);
     };
 
-    const closeUpdatePinModal = () => {
-        setIsModalUpdatePinOpen(false);
-        setSelectedUserId(null);
-    };
-
-    const openUpdatePinModal = (userId: string) => {
-        setSelectedUserId(userId);
-        setIsModalUpdatePinOpen(true);
-    };
-
     const closeAssociateModal = () => {
         setIsModalAssociateOpen(false);
         setSelectedUserId(null);
     };
+    
 
     const openCreateModal = () => {
         setIsModalCreateOpen(true);
@@ -95,7 +90,7 @@ export function UserTable() {
                 </div>
             <DataTable
                 data={data}
-                columns={UserColumns({ openUpdateModal, openDeleteModal, openAssociateModal, openUpdatePinModal })}
+                columns={UserColumns({ openUpdateModal, openDeleteModal, openAssociateModal })}
                 total={data.length}
                 defaultItemsPerPage={itemsPerPage}
                 setItemsPerPage={setItemsPerPage}
@@ -103,7 +98,7 @@ export function UserTable() {
                 setSearch={setSearch}
             />
             {isModalUpdateOpen && selectedUserId && (
-                <UpdateUserModal id={selectedUserId} closeModal={closeUpdateModal} />
+                <UpdateUserModal id={selectedUserId} closeModal={closeUpdateModal} refreshData={refreshData} />
             )}
 
             {isModalDeleteOpen && selectedUserId && (
@@ -115,11 +110,7 @@ export function UserTable() {
             )}
 
             {isModalAssociateOpen && selectedUserId && (
-                <AddCard closeModal={closeAssociateModal} refreshData={refreshData} id={selectedUserId} />
-            )}
-
-            {isModalUpdatePinOpen && selectedUserId && (
-                <UpdatePIN closeModal={closeUpdatePinModal} refreshData={refreshData} id={selectedUserId} />
+                <AssociateCard closeModal={closeAssociateModal} refreshData={refreshData} id={selectedUserId} />
             )}
         </div>
     );

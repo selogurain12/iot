@@ -122,13 +122,28 @@ const createUserPin = async (userId, createCode) => {
     }
 };
 
-const disabledUserPin = async (userId) => {
+const disabledUserPin = async (user_id) => {
+    console.log(user_id)
     try {
-        await client.query( `UPDATE access_codes SET is_active = false WHERE user_id = $1`, [userId]);
+        await client.query( `UPDATE access_codes SET is_active = false WHERE user_id = $1`, [user_id]);
         return;
     } catch (error) {
         throw new Error(error.message);
     }
+};
+
+const getAllAccess = async () => {
+    try {
+        const result = await client.query('SELECT * FROM access_codes');
+        return result.rows;
+    } catch (error) {
+        throw new Error(error);
+    }
+};
+
+const getAccessByIdUserBd = async (id) => {
+    const user = await client.query('SELECT * FROM access_codes WHERE user_id = $1::uuid', [id]);
+    return user.rows[0];
 };
 
 module.exports = {
@@ -136,5 +151,7 @@ module.exports = {
     logAccessAttempt,
     updateCodePinUser,
     createUserPin,
-    disabledUserPin
+    disabledUserPin,
+    getAllAccess,
+    getAccessByIdUserBd
 };
