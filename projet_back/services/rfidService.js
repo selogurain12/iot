@@ -124,6 +124,16 @@ const getRfidByCardId = async (cardId) => {
     return result.rows[0] || null;
 };
 
+const getRfidById = async (id) => {
+    const query = `
+        SELECT r.id, r.card_id, r.is_active, r.created_at, r.user_id
+        FROM rfid_cards r
+        WHERE r.id = $1`;
+
+    const result = await client.query(query, [id]);
+    return result.rows[0] || null;
+};
+
 
 const verifyAccess = async (cardId, pinCode) => {
     // 1. Vérifier si la carte existe et si elle est active
@@ -223,5 +233,6 @@ module.exports = {
     deleteRfid,
     getRfidByCardId,
     verifyAccess,
-    allLogs
+    allLogs,
+    getRfidById
 };

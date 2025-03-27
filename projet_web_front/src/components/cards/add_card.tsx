@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { UserDto } from "../dtos/user.dto";
 import { useAuth } from "../../context/authContext";
 import { CardDto } from "../dtos/card.dto";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
 
 interface AddCardProps {
     closeModal: () => void;
@@ -16,6 +18,7 @@ interface AddCardProps {
 export function AddCard({ closeModal, refreshData }: AddCardProps) {
     const [data, setData] = useState<UserDto[]>([]);
     const [card, setCard] = useState<CardDto[]>([]);
+    const [pin, setpin] = useState("");
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState<string>("");
     const [selectedCard, setSelectedCard] = useState<CardDto | undefined>(undefined); // Type modifié ici
@@ -49,20 +52,34 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
 
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
+    
+        if (!pin.trim()) { // Vérifie si le PIN est vide ou contient uniquement des espaces
+            toast.error("Veuillez entrer un code PIN.");
+            return;
+        }
+    
         try {
-            if (selectedCard) { // Vérification si selectedCard n'est pas undefined
+            if (selectedCard) { // Vérifie si une carte est sélectionnée
                 await axios.put(`http://localhost:3000/rfid/${selectedCard.id}`, {
                     card_id: selectedCard.card_id,
                     user_id: selectedUser
                 });
-                toast.success("Carte RFID ajoutée avec succès");
+    
+                await axios.post(`http://localhost:3000/access`, {
+                    createCode: pin,
+                    user_id: selectedUser
+                });
+    
+                toast.success("Carte RFID ajoutée et code PIN créé avec succès");
                 refreshData();
                 closeModal();
             }
         } catch (error) {
             console.error("Erreur lors de l'envoi des données:", error);
+            toast.error("Une erreur s'est produite lors de l'ajout de la carte.");
         }
     };
+    
 
     return (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
@@ -116,6 +133,16 @@ export function AddCard({ closeModal, refreshData }: AddCardProps) {
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
+                            </div>
+                        )}
+                        {selectedUser && (
+                            <div className="space-y-1">
+                                <Label htmlFor="pin">Code PIN</Label>
+                                <Input
+                                    id="pin"
+                                    value={pin}
+                                    onChange={(e) => setpin(e.target.value)}
+                                />
                             </div>
                         )}
                     </CardContent>

@@ -1,64 +1,52 @@
-import axios from "axios";
-import { UserDto } from "../dtos/user.dto";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
-import { Label } from "../ui/label";
 import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import axios from "axios";
+import { toast } from "sonner";
+import { AccessCodeDto } from "../dtos/access_code.dto";
 
-interface AddCardProps {
+interface UpdatePinModalProps {
     id: string;
     closeModal: () => void;
-    refreshData: () => Promise<void>;
+    refreshData: () => void;
 }
 
-export function UpdatePIN({ id, closeModal, refreshData }: AddCardProps) {
-    const [data, setData] = useState<UserDto>();
-    const [loading, setLoading] = useState(true);
-    const [pin, setPin] = useState("");
+export function UpdatePIN({ id, closeModal, refreshData }: UpdatePinModalProps) {
+    const [newPin, setNewPin] = useState("");
+    const [access, setAccess] = useState<AccessCodeDto>();
+    console.log(id)
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(
-                    `http://localhost:3000/users/${id}`
+                const response = await axios.get<AccessCodeDto>(
+                    `http://localhost:3000/access/${id}`
                 );
-                setData(response.data);
+                setAccess(response.data);
             } catch (error) {
-                console.error("Erreur lors de la récupération des utilisateurs :", error);
-            } finally {
-                setLoading(false);
+                console.error("Erreur lors de la récupération des codes d'accès :", error);
             }
         };
-
+    
         fetchData();
-    }, [id]);
-
-    useEffect(() => {
-        if (data) {
-            setPin(data.password);
-        }
-    }, [data]); 
-
-    const navigate = useNavigate();
-
-    const handleSubmit = async (e: { preventDefault: () => void; }) => {
+    }, [id]); // Ajout de 'id' comme dépendance pour éviter l'exécution infinie
+    
+    console.log(access)
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log(access)
         try {
-            // Assurez-vous de soumettre l'ID de l'utilisateur sélectionné ici
-            await axios.post("http://localhost:3000/rfid");
-            toast.success("Code PIN modifié avec succès");
-            navigate("/userlist");
+            await axios.put(`http://localhost:3000/access`, { userId: access?.user_id, createCode: newPin });
+            toast.success("Code PIN mis à jour avec succès");
             refreshData();
             closeModal();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
-            console.error("Erreur lors de l'envoi des données:", error);
+            toast.error("Erreur lors de la mise à jour du PIN");
         }
     };
-
-    if (loading) return <p>Chargement...</p>;
 
     return (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
@@ -68,16 +56,18 @@ export function UpdatePIN({ id, closeModal, refreshData }: AddCardProps) {
                         <CardTitle>Modifier le code PIN</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                        <div className="space-y-1">
-                            <Label htmlFor="pin">Prénom</Label>
-                            <Input
-                                id="pin"
-                                value={pin}
-                                type="password"
-                                onChange={(e) => setPin(e.target.value)}
-                            />
-                        </div>
-                    </CardContent>
+                <div>
+                    <Label htmlFor="pin">Nouveau code PIN</Label>
+                    <Input
+                        id="pin"
+                        type="text"
+                        value={newPin}
+                        onChange={(e) => setNewPin(e.target.value)}
+                        placeholder="Entrez le nouveau code PIN"
+                        required
+                    />
+                </div>
+                </CardContent>
                     <CardFooter className="flex justify-between">
                         <Button onClick={handleSubmit}>Confirmer</Button>
                         <Button variant="outline" onClick={closeModal}>Annuler</Button>

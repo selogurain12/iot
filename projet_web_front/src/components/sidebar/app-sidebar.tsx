@@ -60,7 +60,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             },
             {
               name: "Modules",
-              url: "#",
+              url: "/module",
               icon: Settings,
             },
           ]

@@ -9,6 +9,7 @@ import { ListHistorique } from './components/historique/historique_list';
 import { ListCards } from './components/cards/card_list';
 import { AuthProvider } from './context/authContext';
 import { Profil } from './components/sidebar/profil';
+import { ListModules } from './components/modules/module_list';
 
 const container = document.querySelector("#root");
 
@@ -25,6 +26,7 @@ root.render(
             <Route path="/historic" element={<ListHistorique />} />
             <Route path="/card" element={<ListCards />} />
             <Route path="/profil" element={<Profil />} />
+            <Route path="/module" element={<ListModules />} />
           </Routes>
       </AuthProvider>
     </Router>

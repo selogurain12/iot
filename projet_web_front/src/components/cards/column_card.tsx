@@ -68,21 +68,6 @@ export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinMod
             ),
         },
         {
-            id: "pin_code",
-            meta: "Code PIN",
-            accessorKey: "pin_code",
-            enableHiding: false,
-            enableSorting: false,
-            header: ({ column }) => (
-                <DataTableColumnHeader column={column} enableHide={false} title="Code PIN" className="text-center w-32" />
-            ),
-            cell: ({ row }) => (
-                <div className="flex space-x-2 justify-center w-32">
-                    <span className="truncate font-medium text-center">{row.getValue("pin_code")}</span>
-                </div>
-            ),
-        },
-        {
             id: "actions",
             enableHiding: false,
             header: ({ column }) => <DataTableColumnHeader column={column} title="" />,
@@ -111,14 +96,14 @@ export function CardColumns({ openUpdateModal, openDeleteModal, openUpdatePinMod
                                             <Link2Off className="size-4" />
                                             Dissocier de l'utilisateur
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem className="gap-2 text-destructive" onClick={() => openDeleteModal(row.original.card_id)}>
+                                        <DropdownMenuItem className="gap-2 text-destructive" onClick={() => openDeleteModal(row.original.id)}>
                                             <Trash2 className="size-4" />
                                             Supprimer
                                         </DropdownMenuItem>
                                     </>
                                 )}
                                 {/* Toujours afficher l'option de modification du PIN */}
-                                <DropdownMenuItem className="gap-2" onClick={() => openUpdatePinModal(row.original.card_id)}>
+                                <DropdownMenuItem className="gap-2" onClick={() => openUpdatePinModal(row.original.user_id)}>
                                     <Pencil className="size-4" />
                                     Modifier le PIN
                                 </DropdownMenuItem>
