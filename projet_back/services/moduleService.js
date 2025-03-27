@@ -1,4 +1,3 @@
-const { get } = require("../routes/users");
 const client = require("./db");
 
 const getAllModules = async () => {
@@ -12,6 +11,14 @@ const getAllModules = async () => {
             };
         } else {
             const pair_name = await client.query('SELECT * FROM module WHERE id = $1', [module.pair_id]);
+            let pair_id = "";
+            if (module.type === 'IN') {
+                pair_id = await client.query('SELECT id FROM module_pairing WHERE module_in_id = $1 and module_out_id = $2', [module.id, module.pair_id]);
+            } else {
+                pair_id = await client.query('SELECT id FROM module_pairing WHERE module_in_id = $2 and module_out_id = $1', [module.id, module.pair_id]);
+            }
+
+            console.log("pair_id : " + pair_id.rows[0].id);
             return {
                 id: module.id,
                 hostname: module.hostname,
@@ -24,15 +31,29 @@ const getAllModules = async () => {
     return formatModules;
 };
 
-const pairModules = async (moduleInId, moduleOutId) => {
-    const moduleIn = await getModuleById(moduleInId);
-    const moduleOut = await getModuleById(moduleOutId);
-    
-    if (moduleIn.type !== moduleOut.type) {
-        await client.query('UPDATE module set pair_id = $2 WHERE id = $1', [moduleInId, moduleOutId]);
-        await client.query('UPDATE module set pair_id = $1 WHERE id = $2', [moduleInId, moduleOutId]);
+const getModulePairing = async () => {
+    return await client.query('SELECT id FROM module_pairing');
+}
+
+// isPairing = false => unpair
+const pairOrUnpairModules = async (moduleInId, moduleOutId, isPairing) => {
+    if (!isPairing) {
+        await client.query('UPDATE module set pair_id = null WHERE id = $1', [moduleInId]);
+        await client.query('UPDATE module set pair_id = null WHERE id = $2', [moduleOutId]);
+        await client.query('DELETE module_pairing WHERE module_in_id = $1 AND module_out_id = $2', [moduleInId, moduleOutId]);
+        return null;
     } else {
-        throw new Error('Les deux modules sélectionnés sont des modules de même type et donc ne peuvent pas être associés');
+        const moduleIn = await getModuleById(moduleInId);
+        const moduleOut = await getModuleById(moduleOutId);
+        if (moduleIn.type !== moduleOut.type) {
+            await client.query('UPDATE module set pair_id = $2 WHERE id = $1', [moduleInId, moduleOutId]);
+            await client.query('UPDATE module set pair_id = $1 WHERE id = $2', [moduleInId, moduleOutId]);
+            await client.query('INSERT INTO module_pairing (module_in_id, module_out_id) VALUES($2, $1)', [moduleOutId, moduleInId]);
+            return await client.query('SELECT id FROM module_pairing WHERE module_in_id = $1 AND module_out_id = $2', [moduleInId, moduleOutId]);
+        } else {
+            throw new Error('Les deux modules sélectionnés sont des modules de même type et donc ne peuvent pas être associés');
+        }
+        return null;
     }
 };
 
@@ -42,5 +63,7 @@ const getModuleById = async (id) => {
 };
 
 module.exports = {
-    getAllModules, pairModules
+    getAllModules,
+    pairOrUnpairModules,
+    getModulePairing
 };

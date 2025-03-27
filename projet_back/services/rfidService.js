@@ -27,6 +27,10 @@ const createRfid = async (rfidData) => {
 
     // Insérer la carte RFID
     const cardQuery = 'INSERT INTO rfid_cards (card_id, user_id, is_active) VALUES ($1, $2, $3) RETURNING *';
+    const cardExist = await client.query('SELECT * FROM rfid_cards WHERE card_id = $1', [card_id]);
+    if (cardExist.rows.length > 0) {
+        await client.query('INSERT INTO module_rfid (module_pairing_id, rfid_id) VALUES($2, $1)', [card_id, moduleInId]);
+    }
     const cardValues = [card_id, user_id, is_active];
     const cardResult = await client.query(cardQuery, cardValues);
 
@@ -41,7 +45,7 @@ const createRfid = async (rfidData) => {
 
 // Met à jour les informations d'une carte RFID
 const updateRfid = async (id, rfidData) => {
-    const { card_id, user_id, is_active } = rfidData;
+    const { card_id, user_id, is_active, module_id } = rfidData;
 
     // Créer le SET dynamiquement en fonction des champs fournis
     let setClauses = [];
@@ -77,6 +81,9 @@ const updateRfid = async (id, rfidData) => {
     // Construire la requête SQL
     const query = `UPDATE rfid_cards SET ${setClauses.join(', ')} WHERE id = $${paramCount} RETURNING *`;
 
+    if (module_id !== undefined && user_id !== undefined) {
+        await client.query('INSERT INTO module_rfid (module_pairing_id, rfid_id) VALUES($2, $1)', [id, module_id]);
+    }
     // Mettre à jour la carte RFID
     const result = await client.query(query, values);
 
