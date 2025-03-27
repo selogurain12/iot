@@ -1,8 +1,6 @@
 
 #include "ConfigManager.h"
 
-
-
 Preferences prefs;
 extern String wifiSsid;
 extern String wifiPassword;
@@ -23,7 +21,7 @@ bool loadConfig()
   String _mqttUser = prefs.getString("mqttUser", "");
   String _mqttPassword = prefs.getString("mqttPassword", "");
   prefs.end();
-  
+
   if (_wifiSsid != "" && _wifiPassword != "" && _mqttServer != "" && _mqttPort != "" && _mqttUser != "" && _mqttPassword != "")
   {
     wifiSsid = _wifiSsid;
@@ -58,9 +56,11 @@ void resetConfig()
   prefs.end();
 }
 
-void resetManager(){
+void resetManager()
+{
   prefs.begin("reset", false);
-  int resetCount = prefs.getInt("resetCount", 0);
+  int resetCount = 0;
+  prefs.putInt("resetCount", resetCount);
   resetCount++;
   Serial.print("Reset count: ");
   Serial.println(resetCount);
@@ -68,7 +68,6 @@ void resetManager(){
   prefs.putInt("resetCount", resetCount);
   prefs.end();
 
-  
   if (resetCount >= MAX_RESET_COUNT)
   {
     Serial.println("Resetting configuration");

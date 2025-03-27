@@ -7,7 +7,7 @@
 #include "MqttManager.h"
 #include "RfidManager.h"
 #include "MatrixKeyboardManager.h"
-#define RFID_TIMEOUT 5000
+#define RFID_TIMEOUT 10000
 String wifiSsid;
 String wifiPassword;
 String mqttServer;
@@ -20,12 +20,12 @@ char hostname[25];
 char accessTopicMqtt[32];
 char displayTopicMqtt[33];
 char cardTopicMqtt[31];
+char existingCardMqtt[38];
 
 enum enumMachineState
 {
   waitingRfid,
   waitingCode,
-  sending,
 };
 enumMachineState machineState = waitingRfid;
 unsigned long lastActiveTime = 0;
@@ -51,6 +51,7 @@ void setup()
   snprintf(accessTopicMqtt, sizeof(accessTopicMqtt), "/in/%s/access", hostname);
   snprintf(displayTopicMqtt, sizeof(displayTopicMqtt), "/in/%s/display", hostname);
   snprintf(cardTopicMqtt, sizeof(cardTopicMqtt), "/in/%s/card", hostname);
+  snprintf(existingCardMqtt, sizeof(existingCardMqtt), "/in/%s/existingcard", hostname);
   resetManager();
 
   if (!loadConfig())
@@ -64,6 +65,7 @@ void setup()
     connectMqtt(mqttServer.c_str(), mqttPort.c_str(), mqttUser.c_str(), mqttPassword.c_str());
     initRfid();
     initKeypad();
+    subscribeMqtt(existingCardMqtt);
     pairing = false;
   }
   Serial.println("Loop :");
@@ -79,6 +81,7 @@ void loop()
   {
     isWifiConnected(wifiSsid.c_str(), wifiPassword.c_str());
     checkMqtt(mqttServer.c_str(), mqttPort.c_str(), mqttUser.c_str(), mqttPassword.c_str());
+    // Serial.println(machineState);
     switch (machineState)
     {
     case enumMachineState::waitingRfid:
@@ -87,9 +90,13 @@ void loop()
       if (strlen(uid) > 0)
       {
         publishMqtt(cardTopicMqtt, uid);
-        machineState = enumMachineState::waitingCode;
         resetKeypad();
         lastActiveTime = millis();
+      }
+      else
+      {
+        machineState = enumMachineState::waitingRfid;
+        memset(keys, 0, sizeof(keys));
       }
       break;
     case enumMachineState::waitingCode:

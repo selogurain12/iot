@@ -15,11 +15,10 @@ int rowPins[ROWS] = {33, 32, 21, 3};
 int currentRow = 0;
 volatile int lastPressedCol = -1;
 volatile unsigned long lastInterruptTime = 0;
-volatile unsigned long lastDetectionTime = 0;
-volatile unsigned long lastDisplayTime = 0;
+unsigned long lastDetectionTime = 0;
+unsigned long lastDisplayTime = 0;
 const unsigned long debounceDelay = 100;
-const unsigned long releaseDelay = 160;
-const unsigned long displayInterval = 2500;
+const unsigned long releaseDelay = 100;
 
 void IRAM_ATTR debounce(int col)
 {

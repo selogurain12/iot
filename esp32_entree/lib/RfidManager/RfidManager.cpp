@@ -1,7 +1,9 @@
 #include "RfidManager.h"
 
-MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522 instance
+#define RFID_TIMEOUT 2000
+volatile unsigned long lastRfidTime = 0;
 
+MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522 instance
 void initRfid()
 {
     SPI.begin();                        // Init SPI bus
@@ -11,12 +13,14 @@ void initRfid()
 
 void scanRfidCard(char *uid)
 {
+    // Serial.println("Scanning RFID card");
     MFRC522::MIFARE_Key rfidKey;
     for (byte i = 0; i < 6; i++)
         rfidKey.keyByte[i] = 0xFF;
 
     if (!mfrc522.PICC_IsNewCardPresent())
     {
+        // Serial.println("New card not present");
         return;
     }
 
@@ -24,7 +28,13 @@ void scanRfidCard(char *uid)
     {
         return;
     }
-
+    Serial.println("Card detected");
+    unsigned long currentTime = millis();
+    if (currentTime - lastRfidTime < RFID_TIMEOUT)
+    {
+        return;
+    }
+    lastRfidTime = millis();
     for (byte i = 0; i < mfrc522.uid.size; i++)
     {
         sprintf(&uid[i * 2], "%02X", mfrc522.uid.uidByte[i]);

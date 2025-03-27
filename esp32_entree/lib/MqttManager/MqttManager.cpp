@@ -1,10 +1,18 @@
 #include "MqttManager.h"
 
 extern char hostname[25];
+extern char existingCardMqtt[38];
+extern char displayTopicMqtt[35];
+enum enumMachineState
+{
+    waitingRfid,
+    waitingCode,
+};
+extern enum enumMachineState machineState;
+extern char keys[5];
 
 WiFiClient client;
 PubSubClient mqtt(client);
-
 
 bool connectMqtt(const char *mqttServer, const char *mqttPort, const char *mqttUser, const char *mqttPassword)
 {
@@ -14,6 +22,7 @@ bool connectMqtt(const char *mqttServer, const char *mqttPort, const char *mqttU
     Serial.println(mqttPort);
 
     mqtt.setServer(mqttServer, atoi(mqttPort));
+    mqtt.setCallback(callbackMqtt);
     int j = 0;
     while (!mqtt.connect(hostname, mqttUser, mqttPassword) && j < 10)
     {
@@ -31,39 +40,77 @@ bool connectMqtt(const char *mqttServer, const char *mqttPort, const char *mqttU
     return true;
 }
 
-bool checkMqtt(const char *mqttServer, const char *mqttPort, const char *mqttUser, const char *mqttPassword) {
-    if (!mqtt.connected()) {
+bool checkMqtt(const char *mqttServer, const char *mqttPort, const char *mqttUser, const char *mqttPassword)
+{
+    if (!mqtt.connected())
+    {
         Serial.println("\nMQTT deconnected");
         mqtt.disconnect();
         delay(1000);
-        if (connectMqtt(mqttServer, mqttPort, mqttUser, mqttPassword)) {
+        if (connectMqtt(mqttServer, mqttPort, mqttUser, mqttPassword))
+        {
             Serial.println("MQTT reconnected");
             return true;
-        } else {
+        }
+        else
+        {
             Serial.println("MQTT reconnection failed");
             return false;
         }
-    } else{
+    }
+    else
+    {
         mqtt.loop();
     }
     return true;
 }
 
-void publishMqtt(const char *topic, const char *message) {
+void publishMqtt(const char *topic, const char *message)
+{
     mqtt.publish(topic, message);
 }
 
-void subscribeMqtt(const char *topic) {
+void subscribeMqtt(const char *topic)
+{
     mqtt.subscribe(topic);
 }
 
-void callbackMqtt(char *topic, byte *payload, unsigned int length) {
-    Serial.print("Message arrived [");
-    Serial.print(topic);
-    Serial.print("] ");
-    for (int i = 0; i < length; i++)
+void callbackMqtt(char *topic, byte *payload, unsigned int length)
+{
+    if (strcmp(topic, existingCardMqtt) == 0)
     {
-        Serial.print((char)payload[i]);
+        char payloadChar[length + 1];
+        for (int i = 0; i < length; i++)
+        {
+            payloadChar[i] = (char)payload[i];
+        }
+        payloadChar[length] = '\0';
+
+        if (strcmp(payloadChar, "1") == 0)
+        {
+            Serial.println("Existing card detected");
+            machineState = enumMachineState::waitingCode;
+            publishMqtt(displayTopicMqtt, "Please enter the code");
+            return;
+        }
+        else if (strcmp(payloadChar, "2") == 0)
+        {
+            Serial.println("Unauthorized card detected");
+            publishMqtt(displayTopicMqtt, "Unauthorized card detected");
+            machineState = enumMachineState::waitingRfid;
+            memset(keys, 0, sizeof(keys));
+        }
+        else if (strcmp(payloadChar, "3") == 0)
+        {
+            Serial.println("Desactivated card detected");
+            publishMqtt(displayTopicMqtt, "Desactivated card detected");
+        }
+        else
+        {
+            Serial.println("Unknown card detected");
+            publishMqtt(displayTopicMqtt, "Unknown card detected");
+        }
+        machineState = enumMachineState::waitingRfid;
+        memset(keys, 0, sizeof(keys));
     }
-    Serial.println();
 }
