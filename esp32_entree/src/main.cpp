@@ -122,7 +122,6 @@ void loop()
         lastActiveTime = millis();
         break;
       case '#':
-        Serial.println(strlen(keys));
         if (strlen(keys) == 4)
         {
           char code[14];
