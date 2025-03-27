@@ -142,8 +142,74 @@ const subscribeToInputModule = (inModule) => {
         handleInputModuleMessage(inModule.id, topic, message);
     });
 
+    // Topic for RFID card detection
+    subscribe(`${topicBase}/card`, (topic, message) => {
+        handleCardDetection(inModule.id, message);
+    });
+
     console.log(`✅ Subscribed to ${inModule.hostname} module topics`);
 };
+
+/**
+ * Handle RFID card detection
+ * @param {string} moduleId - ID of the module that detected the card
+ * @param {string} cardId - RFID card UUID
+ */
+const handleCardDetection = async (moduleId, cardId) => {
+    try {
+        cardId = cardId.trim().toUpperCase();
+        console.log(`📇 RFID card detected by module ${moduleId}: ${cardId}`);
+
+        // Import RFID service
+        const rfidService = require('./rfidService');
+
+        // Check if card exists
+        const existingCard = await rfidService.getRfidByCardId(cardId);
+
+        // get the input module hostname from the id
+        const inputModule = await pgClient.query(
+            'SELECT * FROM module WHERE id = $1',
+            [moduleId]
+        );
+        if (existingCard) {
+            // check if the card is associated with a user (check userid)
+            if (!existingCard.user_id) {
+                console.log(`ℹ️ RFID card ${cardId} is not associated with a user yet`);
+                publish(`/in/${inputModule.rows[0].hostname}/existingcard`, "0");
+                return existingCard;
+            }
+            console.log(`ℹ️ RFID card ${cardId} already exists in database with ID: ${existingCard.id}`);
+
+            publish(`/in/${inputModule.rows[0].hostname}/existingcard`, "1");
+
+            return existingCard;
+        } else {
+
+            // publish to the input module (not output) that a new card is detected so it stops waiting for user input on the keypad
+            publish(`/in/${inputModule.rows[0].hostname}/existingcard`, "0");
+
+
+            // Create new card with default values
+            console.log(`➕ Creating new RFID card ${cardId} in database...`);
+
+            const newCard = await rfidService.createRfid({
+                card_id: cardId,
+                user_id: null, // No user associated yet
+                is_active: false // Inactive by default
+            });
+
+            console.log(`✅ New RFID card created with ID: ${newCard.id}`);
+
+
+            return newCard;
+        }
+    } catch (error) {
+        console.error(`❌ Error handling RFID card detection:`, error);
+        return null;
+    }
+};
+
+
 
 /**
  * Retrieve all input modules and subscribe to their topics
@@ -338,5 +404,6 @@ module.exports = {
     sendCommandToOutputModule,
     handleInputModuleMessage,
     subscribeToInputModule,
-    subscribeToAllInputModules
+    subscribeToAllInputModules,
+    handleCardDetection
 };

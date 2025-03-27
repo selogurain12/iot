@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllModules, pairModules } = require('../services/moduleService');
+const { getAllModules, pairModules, getModulePairing } = require('../services/moduleService');
 const errorHandler = require("../utils/errorHandler");
 
 /**
@@ -31,6 +31,40 @@ const errorHandler = require("../utils/errorHandler");
 router.get("/", async (req, res) => {
     try {
         const modules = await getAllModules();
+        res.json(modules);
+    } catch (error) {
+        errorHandler(res, error);
+    }
+});
+
+/**
+ * @swagger
+ * /module/pairing:
+ *   get:
+ *     summary: Retrieve the pairing information of modules
+ *     tags: [Modules]
+ *     responses:
+ *       200:
+ *         description: A list of module pairings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   moduleInId:
+ *                     type: string
+ *                     description: The ID of the input module
+ *                   moduleOutId:
+ *                     type: string
+ *                     description: The ID of the output module
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/pairing", async (req, res) => {
+    try {
+        const modules = await getModulePairing();
         res.json(modules);
     } catch (error) {
         errorHandler(res, error);
@@ -78,7 +112,7 @@ router.get("/", async (req, res) => {
 router.put("/", async (req, res) => {
     try {
         console.log(req.body);
-        await pairModules(req.body.moduleInId, req.body.moduleOutId);
+        await pairOrUnpairModules(req.body.moduleInId, req.body.moduleOutId, req.body.isPairing);
         res.status(200).json({
             success: true,
             message: "Modules apparayés avec succès"
