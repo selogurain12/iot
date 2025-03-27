@@ -58,17 +58,18 @@ void resetConfig()
   prefs.end();
 }
 
-void resetManager(){
+void resetManager()
+{
   prefs.begin("reset", false);
   int resetCount = 0;
+  resetCount = prefs.getInt("resetCount", 0);
   resetCount++;
   Serial.print("Reset count: ");
   Serial.println(resetCount);
-
+ 
   prefs.putInt("resetCount", resetCount);
   prefs.end();
-
-  
+ 
   if (resetCount >= MAX_RESET_COUNT)
   {
     Serial.println("Resetting configuration");
@@ -77,9 +78,9 @@ void resetManager(){
     prefs.clear();
     prefs.end();
   }
-
+ 
   delay(1000);
   prefs.begin("reset", false);
-  prefs.putInt("resetCount",resetCount);
+  prefs.putInt("resetCount", 0);
   prefs.end();
 };
