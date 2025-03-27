@@ -13,7 +13,9 @@ interface FormFieldContextValue<
 	name: Tname;
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const FormFieldContext = createContext<FormFieldContextValue>(
+	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 	{} as FormFieldContextValue
 );
 

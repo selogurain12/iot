@@ -27,9 +27,6 @@ import { TableBody } from "./table-body";
 import { TableCell } from "./table-cell";
 import { DataTablePagination } from "./table-pagination";
 import { TableHead } from "./table-head";
-import type { DataTableToolbarProps } from "./table-toolbar-props";
-
-type Toolbar<Tdata> = React.ComponentType<DataTableToolbarProps<Tdata>>;
 
 interface TableProps<Tdata, Value> extends HTMLAttributes<HTMLDivElement> {
 	columns: ColumnDef<Tdata, Value>[];
@@ -39,7 +36,6 @@ interface TableProps<Tdata, Value> extends HTMLAttributes<HTMLDivElement> {
 	setItemsPerPage: (itemsPerPage: number) => void;
 	setPage: (page: number) => void;
 	setSearch: (search?: string) => void;
-	ToolbarComponent: Toolbar<Tdata>;
 	defaultItemsPerPage?: number;
 	onCellClick?: (cell: Cell<Tdata, unknown>) => void;
 	toolbarProps?: { [key: string]: unknown };
@@ -54,10 +50,7 @@ export function DataTable<Tdata extends { [key: string]: unknown }, Value>({
 	defaultItemsPerPage = 10,
 	setItemsPerPage,
 	setPage,
-	setSearch,
 	onCellClick = undefined,
-	toolbarProps = undefined,
-	ToolbarComponent,
 }: TableProps<Tdata, Value>) {
 	const [rowSelection, setRowSelection] = useState({});
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -138,11 +131,6 @@ export function DataTable<Tdata extends { [key: string]: unknown }, Value>({
 
 	return (
 		<div className={cn("space-y-6 flex flex-col", className)}>
-			<ToolbarComponent
-				setSearch={setSearch}
-				table={table}
-				{...toolbarProps}
-			/>
 			<div className="flex-grow flex-shrink rounded-2xl">
 				<Table className="bg-white rounded-2xl">
 					<TableHeader>

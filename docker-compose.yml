@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres
+    image: postgres:latest
     restart: always
     shm_size: 128mb
     environment:
@@ -10,7 +10,12 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./db-data:/var/lib/postgresql/data
+      - ./docker/db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   mqtt:
     image: eclipse-mosquitto
@@ -18,10 +23,39 @@ services:
     ports:
       - 1883:1883
       - 9001:9001
-    # environment:
-    # - ALLOW_ANONYMOUS=0
-    # - MQTT_USER=mosquitto
-    # - MQTT_PASSWORD=mosquitto
     volumes:
-      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:rw
-      - ./mosquitto-pwfile:/mosquitto/config/pwfile:rw
+      - ./docker/mosquitto.conf:/mosquitto/config/mosquitto.conf:rw
+      - ./docker/mosquitto-pwfile:/mosquitto/config/pwfile:rw
+
+  backend:
+    build:
+      context: ./projet_back
+      dockerfile: Dockerfile
+    restart: always
+    working_dir: /usr/src/app
+    volumes:
+      - ./projet_back:/usr/src/app
+      - /usr/src/app/node_modules # Évite d'écraser node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+    command: sh -c "npm ci && npx nodemon --legacy-watch --config nodemon.json"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./projet_web_front
+      dockerfile: Dockerfile
+    restart: always
+    working_dir: /usr/src/app
+    volumes:
+      - ./projet_web_front:/usr/src/app
+    ports:
+      - "8080:5173"
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    command: sh -c "npm ci && npm run dev -- --host"
