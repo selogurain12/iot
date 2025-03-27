@@ -3,14 +3,12 @@
 #include "ScreenManager.h"
 
 extern char hostname[25];
+extern char topicAccess[33];
 WiFiClient client;
 PubSubClient mqtt(client);
 
 bool connectMqtt(const char *mqttServer, const char *mqttPort, const char *mqttUser, const char *mqttPassword)
 {
-    String out = "/out/";
-    String topicAccess = out + hostname + "/access";
-    String topicDisplay = out + hostname + "/display";
     Serial.print("Connecting to MQTT : ");
     Serial.print(mqttServer);
     Serial.print(":");
@@ -66,17 +64,25 @@ void subscribeMqtt(const char *topic) {
 }
 
 void callbackMqtt(char *topic,byte *payload, unsigned int length) {
-    String retour;
+    //String retour;
+    char retour[length];
     for (int i = 0; i < length; i++)
     {
-        retour += (char)payload[i];
+        retour[i] = (char)payload[i];
     }
-    String out = "/out/";
-    String topicAccess = out + hostname + "/access";
-    String topicMqtt = topic;
+    retour[length] = '\0';
+    //String out = "/out/";
+    //String topicAccess = out + hostname + "/access";
+    //String topicMqtt = topic;
+    /*
     if (topicMqtt == topicAccess && retour.equals("1")){
         openServo();
     }else{
         loopScreen(retour);
+    }*/
+    if (strcmp(topic,topicAccess)==0 && strcmp(retour,"1")== 0){
+         openServo();
+    }else{
+        loopScreen(retour,length);
     }
 }

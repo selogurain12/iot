@@ -52,6 +52,38 @@ void clearScreen(){
   lcd.clear();
 }
 
+
+void loopScreen(char *texte,int length) {
+  clearScreen();
+  texte[length] = '\0';
+  int tailleTexte = length;
+  if (tailleTexte <= 32) {
+      char ligne1[17] = {0};
+      char ligne2[17] = {0};
+
+      strncpy(ligne1, texte, 16);
+      if (tailleTexte > 16){
+        strncpy(ligne2, texte + 16, 16);
+      }
+
+      lcd.setCursor(0, 0);
+      lcd.print(ligne1);
+      lcd.setCursor(0, 1);
+      lcd.print(ligne2);
+  } else {
+      for (int i = 0; i < tailleTexte - 15; i++) {
+          char ligne[17] = {0};
+
+          strncpy(ligne, texte + i, 16);
+          lcd.setCursor(0, 0);
+          lcd.print(ligne);
+          delay(300);
+      }
+  }
+}
+
+
+/*
 void loopScreen(String texte){
   int tailleTexte = texte.length();
 
@@ -69,3 +101,4 @@ void loopScreen(String texte){
     }
   }
 }
+  */

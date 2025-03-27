@@ -21,9 +21,12 @@ String mqttPassword;
 unsigned long previousMillisScreen;
 unsigned long previousMillisServo;
 
+
 const long intervalScreen = 10000;
 const long intervalServo = 10000;
 
+char topicAccess[33];
+char topicDisplay[34];
 char hostname[25];
 
 WebServer server(80);
@@ -57,14 +60,11 @@ void setup() {
     connectWifi(wifiSsid.c_str(), wifiPassword.c_str());
     connectMqtt(mqttServer.c_str(), mqttPort.c_str(), mqttUser.c_str(), mqttPassword.c_str());
     pairing = false;
-    String out = "/out/";
-    String topicAccess = out + hostname + "/access";
-    String topicDisplay = out + hostname + "/display";
-
-    subscribeMqtt(topicAccess.c_str());
-    subscribeMqtt(topicDisplay.c_str());
+    snprintf(topicAccess,sizeof(topicAccess),"/out/%s/access",hostname);
+    snprintf(topicDisplay,sizeof(topicDisplay),"/out/%s/display",hostname);
+    subscribeMqtt(topicAccess);
+    subscribeMqtt(topicDisplay);
   }
-  Serial.println("Loop :");
 }
 
 void loop() {

@@ -5,5 +5,5 @@
 void showScreen(String texte);
 void initScreen();
 void clearScreen();
-void loopScreen(String texte);
+void loopScreen(char *texte,int length);
 #endif
