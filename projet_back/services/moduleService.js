@@ -2,7 +2,7 @@ const client = require("./db");
 
 const getAllModules = async () => {
     const modules = await client.query('SELECT * FROM module');
-    
+
     let formatModules = await Promise.all(modules.rows.map(async (module) => {
         if (module.pair_id === null) {
             return {
@@ -13,7 +13,7 @@ const getAllModules = async () => {
         } else {
             // Requête pour récupérer le nom du module associé
             const pair_name_result = await client.query('SELECT * FROM module WHERE id = $1', [module.pair_id]);
-            
+
             // Vérifie si le module associé existe
             if (pair_name_result.rows.length === 0) {
                 return {
@@ -23,7 +23,7 @@ const getAllModules = async () => {
                     error: "Module associé non trouvé"
                 };
             }
-            
+
             const pair_name = pair_name_result.rows[0];
             let pair_id = "";
 
@@ -81,7 +81,8 @@ const getModulePairing = async () => {
 
 
 // isPairing = false => unpair
-const pairOrUnpairModules = async (moduleInId, moduleOutId, isPairing) => {
+const pairOrUnpairModules = async (moduleInId, moduleOutId) => {
+    isPairing = true;
     if (!isPairing) {
         await client.query('UPDATE module set pair_id = null WHERE id = $1', [moduleInId]);
         await client.query('UPDATE module set pair_id = null WHERE id = $2', [moduleOutId]);

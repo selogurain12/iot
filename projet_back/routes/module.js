@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllModules, pairModules, getModulePairing } = require('../services/moduleService');
+const { getAllModules, pairOrUnpairModules, getModulePairing } = require('../services/moduleService');
 const errorHandler = require("../utils/errorHandler");
 
 /**
@@ -112,7 +112,7 @@ router.get("/pairing", async (req, res) => {
 router.put("/", async (req, res) => {
     try {
         console.log(req.body);
-        await pairOrUnpairModules(req.body.moduleInId, req.body.moduleOutId, req.body.isPairing);
+        await pairOrUnpairModules(req.body.moduleInId, req.body.moduleOutId);
         res.status(200).json({
             success: true,
             message: "Modules apparayés avec succès"

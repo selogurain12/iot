@@ -98,7 +98,7 @@ const updateCodePinUser = async (userId, createCode) => {
         if (existingCodeResult.rows.length === 0) {
             throw new Error("The provided user does not have a PIN code");
         } else {
-            await client.query( `UPDATE access_codes SET code = $2 WHERE user_id = $1`, [userId, createCode]);
+            await client.query(`UPDATE access_codes SET code = $2 WHERE user_id = $1`, [userId, createCode]);
         }
 
         return;
@@ -114,7 +114,7 @@ const createUserPin = async (userId, createCode) => {
         if (existingCodeResult.rows.length > 0) {
             throw new Error("The provided PIN code already exists for this user.");
         } else {
-            await client.query( `INSERT INTO access_codes (user_id, code, is_active) VALUES ($1, $2, true)`, [userId, createCode]);
+            await client.query(`INSERT INTO access_codes (user_id, code, is_active) VALUES ($1, $2, true)`, [userId, createCode]);
         }
         return;
     } catch (error) {
@@ -125,7 +125,7 @@ const createUserPin = async (userId, createCode) => {
 const disabledUserPin = async (user_id) => {
     console.log(user_id)
     try {
-        await client.query( `UPDATE access_codes SET is_active = false WHERE user_id = $1`, [user_id]);
+        await client.query(`UPDATE access_codes SET is_active = false WHERE user_id = $1`, [user_id]);
         return;
     } catch (error) {
         throw new Error(error.message);

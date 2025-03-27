@@ -109,7 +109,8 @@ router.post("/register", async (req, res) => {
         if (!password) return res.status(400).json({ error: "password is required" });
 
         const result = await createUser({ email, firstname, name, password });
-        res.status(201).json(result);
+        const user = await getUsersByEmail(email);
+        res.status(201).json({ result, user });
     } catch (error) {
         errorHandler(res, error);
     }
@@ -197,7 +198,7 @@ router.put("/update/:id", async (req, res) => {
 
         let updatedPassword = user.password;
         if (newPassword) {
-            const hashedNewPassword = await bcrypt.hash(newPassword, 10); 
+            const hashedNewPassword = await bcrypt.hash(newPassword, 10);
             updatedPassword = hashedNewPassword;
         }
 

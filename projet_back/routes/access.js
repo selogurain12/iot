@@ -39,7 +39,7 @@ const errorHandler = require("../utils/errorHandler");
 router.put("/", async (req, res) => {
     try {
         console.log(req.body.userId)
-        await updateCodePinUser(req.body.user_id, req.body.createCode);
+        await updateCodePinUser(req.body.userId, req.body.createCode);
         res.json({ message: "Code pin updated" });
     } catch (error) {
         errorHandler(res, error);
